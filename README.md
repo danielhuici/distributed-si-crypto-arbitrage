@@ -5,7 +5,7 @@ An Elixir implementation of a cryptocurrency arbitrage software. It scrappes coi
 - Distributed: the implementation is completly modular, so every module of the system can be deployed on different nodes. It's a fault tolerant, master-worker infraestructure which makes the system more reliable and easier to deploy.
 - Multistrategic: the system supports the scrapping of different exchanges, and the calculation of possible profits with more strategies.
 - SI Good practices: the architecture has been designed carefully, so it makes adding a new exchange/coin/calculation strategy really easy.
-- Abstract View: API Rest is available to obtain data, so it makes easier integrate with clients.
+- Abstract View: API Rest is available to obtain data, so it makes client integration easier.
 
 ## Currently supported exchanges
 - Binance
