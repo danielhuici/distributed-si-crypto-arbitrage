@@ -1,1 +1,1 @@
-# distributed-si-crypto-arbitrage
+# Distributed Software Infraestructuture for multistrategic Cryptocurrency arbitrage
