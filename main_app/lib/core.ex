@@ -17,7 +17,8 @@ defmodule Core.Initializer do
 	def init_modules(module_list) do
 		IO.puts("Init modules")
 		[module | tail] = module_list
-		spawn(fn -> register_and_launch(module.name, module.address, module.function) end)
+		IO.puts("Lanzamos: Core.Initializer.register_and_launch(#{inspect(module.name)}, #{inspect(module.address)}, #{inspect(module.function)})")
+		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(#{inspect(module.name)}, '#{module.address}', #{inspect(module.function)})"]) end)
 		#Process.sleep(500)
 		if List.first(tail) != nil do
 			init_modules(tail)
@@ -36,53 +37,55 @@ defmodule Core.Initializer do
 	end
 
 	def veamosxd() do
-		spawn(fn -> Core.Initializer.register_and_launch(:pool, "pool@127.0.0.1", &Core.WorkerPool.init/0) end)
-		spawn(fn -> Core.Initializer.register_and_launch(:proxy, "proxy@127.0.0.1", &Core.Proxy.init/0) end)
-		spawn(fn -> Core.Initializer.register_and_launch(:calculator, "calculator@127.0.0.1", &Core.Calculator.init/0) end)
-		spawn(fn -> Core.Initializer.register_and_launch(:worker, "worker@127.0.0.1", &Core.Worker.init/0) end)
-		spawn(fn -> Core.Initializer.register_and_launch(:master, "master@127.0.0.1", &Core.Master.init/0) end)
-		
-		Process.sleep(99000)
+		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:pool, 'pool@127.0.0.1', &Core.WorkerPool.init/0)"]) end)
+		IO.puts("Ok done")
+		System.cmd("cmd.exe", ["/c", "start"])
+		System.cmd("cmd.exe", ["/c", "start"])
+		#Core.Initializer.register_and_launch(:pool, "pool@127.0.0.1", &Core.WorkerPool.init/0)
+		#Core.Initializer.register_and_launch(:proxy, "proxy@127.0.0.1", &Core.Proxy.init/0
+		#Core.Initializer.register_and_launch(:calculator, "calculator@127.0.0.1", &Core.Calculator.init/0
+		#Core.Initializer.register_and_launch(:worker, "worker@127.0.0.1", &Core.Worker.init/0
+		#Core.Initializer.register_and_launch(:master, "master@127.0.0.1", &Core.Master.init/0
 	end
 
-
-	def register_and_launch(node_name, node_addr, function) do
-		IO.puts("Starting #{inspect(node_name)} with address #{inspect(node_addr)} and function #{inspect(function)} and cookie #{inspect(Nodes.get_cookie())}")
-		Node.start String.to_atom(node_addr)
-		Node.set_cookie String.to_atom("testing")
+	def register_and_launch(node_name, node_addr, module) do
+		IO.puts("Starting #{inspect(node_name)} with address #{inspect(node_addr)} and module #{inspect(module)} and cookie #{inspect(Nodes.get_cookie())}")
+		Node.start(String.to_atom(node_addr))
+		Node.set_cookie(String.to_atom("testing"))
 		Process.register(self(), node_name)
 		#Nodes.set_pid(node_name, self())
-		function.()
+		module.init()
 	end
 
 end
 
 
 defmodule Core.Worker do
-		def init() do
-			IO.puts("[WORKER] #{inspect(self())} started")
-			receive do
-				{:req, {proxy_pid, exchange}} -> spawn(fn -> exchange_factory(exchange) end)
-												 handle_monitor(proxy_pid)
-			end			
-		end
+	@behaviour DistributedModule
+	def init() do
+		IO.puts("[WORKER] #{inspect(self())} started")
+		receive do
+			{:req, {proxy_pid, exchange}} -> exchange_factory(exchange)
+												handle_monitor(proxy_pid)
+		end			
+	end
 
-		def handle_monitor(proxy_pid) do
-			send(proxy_pid, {:alive})
-			Process.sleep(3000)
-			handle_monitor(proxy_pid)
-		end
+	defp handle_monitor(proxy_pid) do
+		send(proxy_pid, {:alive})
+		Process.sleep(3000)
+		handle_monitor(proxy_pid)
+	end
 
-		def exchange_factory(exchange) do
-			IO.puts("[WORKER] Factory creates insance for monitor #{inspect(exchange)}")
-			function = Exchange.get_handler_function(exchange)
-			function.([])
-		end
+	defp exchange_factory(exchange) do
+		IO.puts("[WORKER] Factory creates insance for monitor #{inspect(exchange)}")
+		exchange_module = Exchange.Model.get_module_handler(exchange)
+		spawn(fn -> exchange_module.operate([]) end)
+	end
 
 end
 
 defmodule Core.WorkerPool do
-
+	@behaviour DistributedModule
 	def add_worker(worker, lista) do
 	IO.inspect lista, label: "POOL DE WORKERS: List add:"
 		lista ++ [worker]
@@ -118,11 +121,12 @@ defmodule Core.WorkerPool do
 end
 
 defmodule Core.Master do
+	@behaviour DistributedModule
 	def init() do
-		IO.puts("[MASTER] Esperando al resto de módulos...")
-		Process.sleep(3000)
-		IO.puts("[MASTER] Iniciado. Comienza interacción")
-		master(Exchange.get_exchange_list())
+		IO.puts("[MASTER] Wait till rest of modules gets ready...")
+		Process.sleep(1000)
+		IO.puts("[MASTER] Started")
+		master(Exchange.Model.get_exchange_list())
 	end
 
 	def master(exchange_list) do
@@ -141,6 +145,7 @@ defmodule Core.Master do
 											
 				{resultado} -> IO.puts("MASTER: Worker ha terminado. Lo envio a POOL DE WORKERS. naah ahora es nuevo: #{inspect(resultado)}")
 								#send({:pool,pool_pid},{:aniadir, worker_pid})
+				after 6_000 -> IO.puts("No recibo nada...")
 			end
 		end
 		master(exchange_list)
@@ -149,6 +154,7 @@ defmodule Core.Master do
 end
 
 defmodule Core.Proxy do
+	@behaviour DistributedModule
 	def init() do
 		IO.puts("[PROXY] iniciado")
 		proxy()
@@ -189,18 +195,14 @@ defmodule Core.Proxy do
 end
 
 defmodule Core.Calculator do
+	@behaviour DistributedModule
 	def init() do 
-		set_strategy(Calculator.get_current_function())
-	end
-
-	defp set_strategy(strategy) do
 		init_coin_map = create_map(ModelCrypto.get_crypto_list(), %{})
-		handle_values(init_coin_map, %{}, strategy)
-
-
+		handle_values(init_coin_map, %{})
 	end
 
-	def create_map(cryptos, map) do 
+
+	defp create_map(cryptos, map) do 
 		map = if List.first(cryptos) != nil do
 			[coin | tail] = cryptos
 			map = Map.put(map, coin.crypto, %{})
@@ -211,31 +213,29 @@ defmodule Core.Calculator do
 		map
 	end
 
-	def handle_values(coin_value_map, arbitrage_map, strategy) do
-		receive do
+	defp handle_values(coin_value_map, arbitrage_map) do
+		receive do 
 			{:new_value, {exchange, coin, value}} -> IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
 													map = Map.put(coin_value_map[ModelCrypto.get_crypto_name(exchange, coin)], exchange, value)
 													coin_value_map = Map.put(coin_value_map, ModelCrypto.get_crypto_name(exchange, coin), map)
-													strategy.(coin_value_map)
-													handle_values(coin_value_map, arbitrage_map, strategy)
+													call_strategy(Calculator.Model.get_strategy_lists(), coin_value_map)
+													handle_values(coin_value_map, arbitrage_map)
 			{:new_calc, {coin, new_arbitrage_calc}} ->  IO.puts("[CALCULATOR] Got new data calculated for coin #{inspect(coin)}: #{inspect(new_arbitrage_calc)}")
-														handle_values(coin_value_map, Map.put(arbitrage_map, coin, new_arbitrage_calc), strategy)
+														handle_values(coin_value_map, Map.put(arbitrage_map, coin, new_arbitrage_calc))
 			{:get_values, api_pid} -> IO.puts("[CALCULATOR] Send data to Web server")
 									  send(api_pid, {:arbitrage_values, arbitrage_map})
-									  handle_values(coin_value_map, arbitrage_map, strategy)
+									  handle_values(coin_value_map, arbitrage_map)
 			
 			_-> IO.puts("CALCULATOR: Error. Valor de recepción no controlado")
 
 		end
 	end
 
-
-	#%{BTC_USD:
-	#		%{
-	#		min_exchange: Binance
-	#		max_exchange: Bitfinex
-	#		min_value: 
-	#		max_value: 
-	#	}
-
+	def call_strategy(list_strategies, coin_value_map) do
+		if list_strategies != [] do
+			[strategy | tail] = list_strategies
+			strategy.calculate(coin_value_map)
+			call_strategy(tail, coin_value_map)
+		end
+	end
 end

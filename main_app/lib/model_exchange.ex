@@ -1,10 +1,10 @@
-defmodule Exchange do
+defmodule Exchange.Model do
     @exchange_list  %{
-        :binance => &Exchange.Binance.operate/1, 
-        :bitfinex => &Exchange.Bitfinex.operate/1
+        :binance => Exchange.Binance,
+        :bitfinex => Exchange.Bitfinex
     }
     
-    def get_handler_function(exchange) do
+    def get_module_handler(exchange) do
         @exchange_list[exchange]
     end
 

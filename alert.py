@@ -8,6 +8,15 @@ import threading
 import requests
 import json
 import time
+from dotenv import load_dotenv
+load_dotenv()
+
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+MYSQL_HOST= os.getenv("MYSQL_HOST")
+MYSQL_USERNAME= os.getenv("MYSQL_USERNAME")
+MYSQL_PASSWORD= os.getenv("MYSQL_PASSWORD")
+MYSQL_DATABASE= os.getenv("MYSQL_DATABASE")
+ARBITRAGE_API= os.getenv("ARBITRAGE_API")
 
 
 class DatabaseHandler:
@@ -26,9 +35,9 @@ class DatabaseHandler:
     CHECK_USER_EXISTS = ("SELECT id FROM users WHERE id = %(user_id)s")
 
     def connect(self):
-        return mysql.connector.MySQLConnection(user='daniel', password='inspiron123',
-                                 host='win.danielhuici.ml',
-                                 database='telegram_bot')
+        return mysql.connector.MySQLConnection(user=MYSQL_USERNAME, password=MYSQL_PASSWORD,
+                                 host=MYSQL_HOST,
+                                 database=MYSQL_DATABASE)
 
     def insert_user(self, id):
         connection = self.connect()
@@ -84,7 +93,7 @@ class DatabaseHandler:
 
 class TelegramHandler:
     def get_updater():
-        return Updater("1601753934:AAHi_INxa9Q5MltQe6CeIhrSoWrV35sF4F4")
+        return Updater(TELEGRAM_TOKEN)
 
     def set_handlers(updater):
         dispatcher = updater.dispatcher
@@ -99,7 +108,7 @@ class TelegramHandler:
         db_handler = DatabaseHandler()
         while True:
             users = db_handler.get_users()
-            response = requests.get('http://localhost:8080/values')
+            response = requests.get(ARBITRAGE_API)
             json_data = json.loads(response.text)
             updater = TelegramHandler.get_updater()
             bot_message = "\U0000203C Arbitrage update\n"

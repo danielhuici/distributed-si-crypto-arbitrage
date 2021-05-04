@@ -1,9 +1,10 @@
 defmodule Calculator.BasicStrategy do
+	@behaviour Calculator
 	def calculate(coin_values_map) do
 		Enum.each(coin_values_map, fn({key, value}) ->
 			if (value != %{}) do # Check if map has values yet
-				{min_exchange, min_value} = get_min_value(value, Exchange.get_exchange_list(), {:nil, 999999999}) #{exchange, value}
-				{max_exchange, max_value} = get_max_value(value, Exchange.get_exchange_list(), {:nil, 0}) #{exchange, value}
+				{min_exchange, min_value} = get_min_value(value, Exchange.Model.get_exchange_list(), {:nil, 999999999}) #{exchange, value}
+				{max_exchange, max_value} = get_max_value(value, Exchange.Model.get_exchange_list(), {:nil, 0}) #{exchange, value}
 				result = max_value / min_value
 				map = %{:min_exchange => min_exchange,
 						:max_exchange => max_exchange,

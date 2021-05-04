@@ -1,15 +1,15 @@
 defmodule Nodes do
     @cookie :testing
     @list_modules [
-        %{:name => :pool, :address => "pool@127.0.0.1", :function => &Core.WorkerPool.init/0},
-        %{:name => :proxy, :address => "proxy@127.0.0.1", :function => &Core.Proxy.init/0},
-        %{:name => :calculator, :address => "calculator@127.0.0.1", :function => &Core.Calculator.init/0},
-        %{:name => :master, :address => "master@127.0.0.1", :function => &Core.Master.init/0}
+        %{:name => :pool, :address => "pool@127.0.0.1", :function => Core.WorkerPool},
+        %{:name => :proxy, :address => "proxy@127.0.0.1", :function => Core.Proxy},
+        %{:name => :calculator, :address => "calculator@127.0.0.1", :function => Core.Calculator},
+        %{:name => :master, :address => "master@127.0.0.1", :function => Core.Master}
     ]
 
     @list_workers [
-        %{:name => :worker, :address => "worker@127.0.0.1", :pid => :nil},
-        %{:name => :worker1, :address => "worker1@127.0.0.1", :pid => :nil},
+        %{:name => :worker, :address => "worker@127.0.0.1"},
+        %{:name => :worker1, :address => "worker1@127.0.0.1"},
        # %{:name => :worker2, :address => "worker2@127.0.0.1", :pid => :nil},
        # %{:name => :worker3, :address => "worker3@127.0.0.1", :pid => :nil}
     ]
@@ -42,6 +42,5 @@ defmodule Nodes do
         end
         head
     end
-
 
 end

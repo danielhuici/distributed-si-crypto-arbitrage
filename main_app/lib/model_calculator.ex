@@ -1,13 +1,9 @@
-defmodule Calculator do
-    @current :basic_strategy
+defmodule Calculator.Model do
     @list_calcs [
-        %{:basic_strategy => &Calculator.BasicStrategy.calculate/1}
+        Calculator.BasicStrategy
     ]
-
-    def get_current_calc do @current end
     
-    #TODO: Cambiar!!
-    def get_current_function() do
-        &Calculator.BasicStrategy.calculate/1
+    def get_strategy_lists() do
+        @list_calcs
     end
 end

@@ -1,16 +1,14 @@
 defmodule Exchange.Bitfinex do
+    @behaviour Exchange
+
 	def operate(list_coin) do
-        IO.puts("Al principio!: #{inspect(list_coin)}")
         list_coin = if List.first(list_coin) == nil do 
             list_coin = ModelCrypto.get_cryptos(:bitfinex)
         else 
             list_coin
         end
 
-        IO.puts("Un poco despues...: #{inspect(list_coin)}")
-        [coin | tail] = list_coin
-        IO.puts("VAMOS, BITFINEX!: #{inspect(coin)}")
-        
+        [coin | tail] = list_coin        
 
         url = "https://api.bitfinex.com/v2/calc/trade/avg"
         body_params = Jason.encode!(%{"symbol" => "t#{coin}", "amount" => "100"})
@@ -22,7 +20,6 @@ defmodule Exchange.Bitfinex do
                 send({:calculator,:"calculator@127.0.0.1"}, {:new_value, {:bitfinex, coin, value}})
         end
         Process.sleep(2000)
-        IO.puts("Vamos a la siguiente: #{inspect(tail)}")
         operate(tail)
     end
 end

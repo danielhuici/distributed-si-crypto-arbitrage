@@ -1,4 +1,5 @@
 defmodule Exchange.Binance do
+	@behaviour Exchange
 
     def operate(list_coin) do
 		list_coin = if list_coin == [] do
@@ -8,7 +9,6 @@ defmodule Exchange.Binance do
 		end
 		
 		[coin | tail] = list_coin
-		IO.puts("GO, BINANCE!: #{inspect(coin)}")
 		url = "https://binance.com/api/v3/avgPrice?symbol=#{coin}"
 		
 		HTTPoison.start
@@ -16,7 +16,6 @@ defmodule Exchange.Binance do
 			hackney: [{:force_redirect, true}]) do
 			{:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
 				value = Float.parse(Jason.decode!(body)["price"])
-				IO.puts("Ver valor binance: #{inspect(value)}")
 				send({:calculator,:"calculator@127.0.0.1"}, {:new_value, {:binance, coin, elem(value,0)}})
 			#{:ok, %HTTPoison.Response{status_code: 404}} ->
 			#	IO.puts "Not found :("
