@@ -102,7 +102,6 @@ class TelegramHandler:
         updater.start_polling()
         updater.idle()
 
-
     def monitor():
         print("Started")
         db_handler = DatabaseHandler()

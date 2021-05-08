@@ -2,46 +2,51 @@ defmodule Calculator.BasicStrategy do
 	@behaviour Calculator
 	def calculate(coin_values_map) do
 		Enum.each(coin_values_map, fn({key, value}) ->
-			if (value != %{}) do # Check if map has values yet
-				{min_exchange, min_value} = get_min_value(value, Exchange.Model.get_exchange_list(), {:nil, 999999999}) #{exchange, value}
-				{max_exchange, max_value} = get_max_value(value, Exchange.Model.get_exchange_list(), {:nil, 0}) #{exchange, value}
-				result = max_value / min_value
-				map = %{:min_exchange => min_exchange,
-						:max_exchange => max_exchange,
-						:min_value => min_value,
-						:max_value => max_value,
-						:profit => result}
+			if (value != %{}) do # Check if map values 
+				map = cross_all_exchanges(Map.to_list(value), %{})
 				send(Nodes.get_pid(:calculator), {:new_calc, {key, map}})
 			end
 		end)
 		coin_values_map
 	end
 
-	defp get_min_value(coin_values_map, [], min) do
-		min
-	end
-
-	defp get_min_value(coin_values_map, exchange_list, min) do
-		[exchange | tail] = exchange_list
-		if coin_values_map[exchange] != nil && coin_values_map[exchange] < elem(min, 1) do
-			get_min_value(coin_values_map, tail, {exchange, coin_values_map[exchange]})
-		else 
-			get_min_value(coin_values_map, tail, min)
+	defp cross_all_exchanges(exchange_values_map, result_map) do # [Binance, Bitflinex, Coinbase] => Binance - Bitflinex, Binance - Coinbase, Bitflinex - Coinbase
+		result_map = if length(exchange_values_map) > 1 do
+			[exchange1 | tail] = exchange_values_map
+			result_map = cross_two_exchanges(exchange1, tail, result_map)
+			cross_all_exchanges(tail, result_map)
+		else
+			result_map
 		end
 	end
 
-	defp get_max_value(coin_values_map, [], max) do
-		max
-	end
-
-	defp get_max_value(coin_values_map, exchange_list, max) do
-		[exchange | tail] = exchange_list
-		if coin_values_map[exchange] != nil && coin_values_map[exchange] >  elem(max, 1) do
-			get_max_value(coin_values_map, tail, {exchange, coin_values_map[exchange]})
+	defp cross_two_exchanges(exchange1, list_exchange, result_map) do
+		result_map = if list_exchange != [] do
+			{exchange1, value1} = exchange1
+			[{exchange2, value2} | tail] = list_exchange 
+			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange1, exchange2, value1, value2))
+			cross_two_exchanges(exchange1, tail, result_map)
+			result_map
 		else 
-			get_max_value(coin_values_map, tail, max)
+			result_map
 		end
 	end
 
+	defp new_get_minmax_value(exchange1, exchange2, value1, value2) do
+		value_map = if value1 < value2 do
+			%{:min_exchange => exchange1,
+			  :max_exchange => exchange2,
+			  :min_value => value1,
+			  :max_value => value2,
+			  :profit => value2/value1}
+		else
+			%{:min_exchange => exchange2,
+			  :max_exchange => exchange1,
+			  :min_value => value2,
+			  :max_value => value1,
+			  :profit => value1/value2}
+		end
+		value_map
+	end
 	
 end

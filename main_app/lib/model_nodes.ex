@@ -28,13 +28,8 @@ defmodule Nodes do
         end        
     end
 
-    def set_pid(module, pid) do
-        map = search_map(@list_modules, module)
-
-    end
-
     defp search_map(list, module) do
-        [head | tail] = list
+        [head | _] = list
         head = if head.name != module do
             search_map(list, module)
         else 
