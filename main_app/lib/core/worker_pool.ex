@@ -1,12 +1,12 @@
 defmodule Core.WorkerPool do
 	@behaviour DistributedModule
 	def add_worker(worker, lista) do
-	IO.inspect lista, label: "POOL DE WORKERS: List add:"
+	IO.inspect lista, label: "[POOL] List add:"
 		lista ++ [worker]
 	end
 	
 	def init() do
-		IO.puts("POOL: iniciado")
+		IO.puts("[POOL] Strarted")
 		listen(Nodes.get_worker_list())
 	end
 

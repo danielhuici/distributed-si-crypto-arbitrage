@@ -22,7 +22,8 @@ defmodule Tfg.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.8"},
-      {:jason, "~> 1.2"}
+      {:jason, "~> 1.2"},
+	  {:myxql, "~> 0.5.0"}
     ]
   end
 end

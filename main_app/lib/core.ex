@@ -1,51 +1,49 @@
 defmodule Core.Initializer do
-	
-	def init() do
-		init_workers(Nodes.get_worker_list())
-		init_modules(Nodes.get_module_list())
-		receive do
-			_ -> IO.puts("Nunca debería llegar aquí")
-		end
+
+	def init_all() do
+		{:ok, hostname} = :inet.gethostname
+		modules = MyXQL.query!(pid, "SELECT name, address FROM modules WHERE id_host IN (SELECT id FROM hosts WHERE hostname='#{hostname}')")
+		workers = MyXQL.query!(pid, "SELECT name, address FROM workers WHERE id_host IN (SELECT id FROM hosts WHERE hostname='#{hostname}')")
+
+		init_modules(modules.rows)
+		init_workers(workers.rows)
+
+		Process.sleep(60)
 	end
 
+	def init_modules(rows) do
+		[module | tail] = rows
 
-	def init_modules(module_list) do
-		IO.puts("Init modules")
-		[module | tail] = module_list
-		IO.puts("Lanzamos: Core.Initializer.register_and_launch(#{inspect(module.name)}, #{inspect(module.address)}, #{inspect(module.function)})")
-		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(#{inspect(module.name)}, '#{module.address}', #{inspect(module.function)})"]) end)
-		#Process.sleep(500)
+		name = List.first(module)
+		address = List.last(module)
+
+		case name do
+			"pool" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
+			"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
+			"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
+			"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
+		end
+
 		if List.first(tail) != nil do
 			init_modules(tail)
-		else 
-			IO.puts("Hasta el infinito...")
-			Process.sleep(99000)
 		end
 	end
 
-	def init_workers(worker_list) do
-		[worker | tail] = worker_list
-		spawn(fn -> register_and_launch(worker.name, worker.address, &Core.Worker.init/0) end)
+	def init_workers(rows) do
+		[worker | tail] = rows
+
+		name = List.first(worker)
+		address = List.last(worker)
+
+		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
 		if List.first(tail) != nil do
 			init_workers(tail)
 		end
 	end
 
-	def veamosxd() do
-		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:pool, 'pool@127.0.0.1', &Core.WorkerPool.init/0)"]) end)
-		IO.puts("Ok done")
-		System.cmd("cmd.exe", ["/c", "start"])
-		System.cmd("cmd.exe", ["/c", "start"])
-		#Core.Initializer.register_and_launch(:pool, "pool@127.0.0.1", &Core.WorkerPool.init/0)
-		#Core.Initializer.register_and_launch(:proxy, "proxy@127.0.0.1", &Core.Proxy.init/0
-		#Core.Initializer.register_and_launch(:calculator, "calculator@127.0.0.1", &Core.Calculator.init/0
-		#Core.Initializer.register_and_launch(:worker, "worker@127.0.0.1", &Core.Worker.init/0
-		#Core.Initializer.register_and_launch(:master, "master@127.0.0.1", &Core.Master.init/0
-	end
-
 	def register_and_launch(node_name, node_addr, module) do
 		IO.puts("Starting #{inspect(node_name)} with address #{inspect(node_addr)} and module #{inspect(module)} and cookie #{inspect(Nodes.get_cookie())}")
-		Node.start(String.to_atom(node_addr))
+		Node.start(node_addr)
 		Node.set_cookie(String.to_atom("testing"))
 		Process.register(self(), node_name)
 		#Nodes.set_pid(node_name, self())

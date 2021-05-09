@@ -2,7 +2,7 @@ defmodule Core.Master do
 	@behaviour DistributedModule
 	def init() do
 		IO.puts("[MASTER] Wait till rest of modules gets ready...")
-		Process.sleep(1000)
+		Process.sleep(10000)
 		IO.puts("[MASTER] Started")
 		master(Exchange.Model.get_exchange_list())
 	end
