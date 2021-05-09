@@ -1,7 +1,7 @@
 defmodule Core.Calculator do
 	@behaviour DistributedModule
 	def init() do 
-		init_coin_map = create_map(ModelCrypto.get_crypto_list(), %{})
+		init_coin_map = create_map(Coin.Model.get_coins(), %{})
         IO.puts("Init map: #{inspect(init_coin_map)}")
 		handle_values(init_coin_map, %{})
 	end
@@ -10,7 +10,7 @@ defmodule Core.Calculator do
 	defp create_map(cryptos, map) do 
 		map = if List.first(cryptos) != nil do
 			[coin | tail] = cryptos
-			map = Map.put(map, coin.crypto, %{})
+			map = Map.put(map, coin, %{})
 			create_map(tail, map)
 		else 
 			map
