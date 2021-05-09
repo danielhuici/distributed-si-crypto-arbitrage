@@ -2,6 +2,7 @@ defmodule Core.Calculator do
 	@behaviour DistributedModule
 	def init() do 
 		init_coin_map = create_map(ModelCrypto.get_crypto_list(), %{})
+        IO.puts("Init map: #{inspect(init_coin_map)}")
 		handle_values(init_coin_map, %{})
 	end
 
@@ -20,9 +21,9 @@ defmodule Core.Calculator do
 	defp handle_values(coin_value_map, arbitrage_map) do
 		receive do 
 			{:new_value, {exchange, coin, value}} -> IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
-													map = Map.put(coin_value_map[ModelCrypto.get_crypto_name(exchange, coin)], exchange, value)
-													coin_value_map = Map.put(coin_value_map, ModelCrypto.get_crypto_name(exchange, coin), map)
-													call_strategy(Calculator.Model.get_strategy_lists(), coin_value_map)
+													map = Map.put(coin_value_map[String.to_atom(coin)], exchange, value)
+													coin_value_map = Map.put(coin_value_map, String.to_atom(coin), map)
+													call_strategies(Calculator.Model.get_strategy_lists(), coin_value_map)
 													handle_values(coin_value_map, arbitrage_map)
 			{:new_calc, {coin, new_arbitrage_calc}} ->  IO.puts("[CALCULATOR] Got new data calculated for coin #{inspect(coin)}: #{inspect(new_arbitrage_calc)}")
 														IO.puts("[STATUS] #{inspect(arbitrage_map)}")
@@ -36,11 +37,11 @@ defmodule Core.Calculator do
 		end
 	end
 
-	def call_strategy(list_strategies, coin_value_map) do
+	def call_strategies(list_strategies, coin_value_map) do
 		if list_strategies != [] do
 			[strategy | tail] = list_strategies
 			strategy.calculate(coin_value_map)
-			call_strategy(tail, coin_value_map)
+			call_strategies(tail, coin_value_map)
 		end
 	end
 end
