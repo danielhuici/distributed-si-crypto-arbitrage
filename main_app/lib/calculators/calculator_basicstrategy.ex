@@ -1,10 +1,11 @@
 defmodule Calculator.BasicStrategy do
 	@behaviour Calculator
-	def calculate(coin_values_map) do
+	def calculate(coin_values_map, calculator_handler_pid) do
 		Enum.each(coin_values_map, fn({key, value}) ->
 			if (value != %{}) do # Check if map values 
 				map = cross_all_exchanges(Map.to_list(value), %{})
-				send(NodeRepository.get_module_pid("calculator"), {:new_calc, {key, map}})
+				IO.puts("Final MAP: #{inspect(map)}")
+				send(calculator_handler_pid, {:new_calc, {key, map}})
 			end
 		end)
 		coin_values_map
@@ -18,15 +19,17 @@ defmodule Calculator.BasicStrategy do
 		else
 			result_map
 		end
+		
 	end
 
-	defp cross_two_exchanges(exchange1, list_exchange, result_map) do
-		result_map = if list_exchange != [] do
-			{exchange1, value1} = exchange1
-			[{exchange2, value2} | tail] = list_exchange 
-			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange1, exchange2, value1, value2))
+	defp cross_two_exchanges(exchange1, rest_exchanges, result_map) do
+		result_map = if rest_exchanges != [] do
+			{exchange_1, value1} = exchange1
+			[{exchange2, value2} | tail] = rest_exchanges 
+			IO.puts("Cross #{inspect(exchange_1)} --> #{inspect(exchange2)}")
+			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange_1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange_1, exchange2, value1, value2))
+			IO.puts("Result map: #{inspect(result_map)}")
 			cross_two_exchanges(exchange1, tail, result_map)
-			result_map
 		else 
 			result_map
 		end

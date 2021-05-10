@@ -1,7 +1,8 @@
 defmodule Exchange.Model do
     @exchange_list  %{
         :binance => Exchange.Binance,
-        :bitfinex => Exchange.Bitfinex
+        :bitfinex => Exchange.Bitfinex,
+        :kraken => Exchange.Kraken
     }
     
     def get_module_handler(exchange) do
