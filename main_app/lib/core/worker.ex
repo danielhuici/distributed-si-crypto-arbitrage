@@ -1,11 +1,18 @@
 defmodule Core.Worker do
 	@behaviour DistributedModule
 	def init() do
-		IO.puts("[WORKER] #{inspect(self())} started")
+		IO.puts("[WORKER] Started")
+		wait_call()
+	end
+
+	defp wait_call() do
 		receive do
 			{:req, {proxy_pid, exchange}} -> exchange_factory(exchange)
 											 handle_monitor(proxy_pid)
-		end			
+			{:available, pid} -> IO.puts("Available. #{inspect(pid)}")
+								 send(pid, {:available})
+								 wait_call()		 
+		end		
 	end
 
 	defp handle_monitor(proxy_pid) do

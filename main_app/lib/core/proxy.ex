@@ -2,6 +2,7 @@ defmodule Core.Proxy do
 	@behaviour DistributedModule
 	def init() do
 		IO.puts("[PROXY] iniciado")
+		
 		proxy()
 	end
 
@@ -26,7 +27,7 @@ defmodule Core.Proxy do
 						monitor(worker, exchange)
 			
 			after 30_000 -> IO.puts("[PROXY] Worker is down. Notify Master")
-							send(Nodes.get_pid(:master), {:worker_down, exchange})
+							send(NodeRepository.get_module_pid("master"), {:worker_down, exchange})
 		end
 	end
 end

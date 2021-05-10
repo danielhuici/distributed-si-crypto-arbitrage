@@ -1,9 +1,7 @@
 defmodule Core.Calculator do
 	@behaviour DistributedModule
 	def init() do 
-		init_coin_map = create_map(Coin.Model.get_coins(), %{})
-        IO.puts("Init map: #{inspect(init_coin_map)}")
-		handle_values(init_coin_map, %{})
+		handle_values(%{}, %{})
 	end
 
 
@@ -21,6 +19,11 @@ defmodule Core.Calculator do
 	defp handle_values(coin_value_map, arbitrage_map) do
 		receive do 
 			{:new_value, {exchange, coin, value}} -> IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
+													coin_value_map = if coin_value_map[String.to_atom(coin)] == nil do
+														Map.put(coin_value_map, String.to_atom(coin), %{})
+													else
+														coin_value_map
+													end
 													map = Map.put(coin_value_map[String.to_atom(coin)], exchange, value)
 													coin_value_map = Map.put(coin_value_map, String.to_atom(coin), map)
 													call_strategies(Calculator.Model.get_strategy_lists(), coin_value_map)

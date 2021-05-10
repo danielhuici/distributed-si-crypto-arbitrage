@@ -25,7 +25,7 @@ defmodule Exchange.Binance do
 			{:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
 				value = Float.parse(Jason.decode!(body)["price"])
 				IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
-				send(Nodes.get_pid(:calculator), {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
+				send(NodeRepository.get_module_pid("calculator"), {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
 			_ -> IO.puts("Error while requesting #{inspect(@exchange)}")
 			#	IO.puts "Not found :("
 			#{:error, %HTTPoison.Error{reason: reason}} ->

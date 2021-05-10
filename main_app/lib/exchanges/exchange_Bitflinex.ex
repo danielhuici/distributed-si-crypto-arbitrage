@@ -26,7 +26,7 @@ defmodule Exchange.Bitfinex do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> 
                 value = List.first(Jason.decode!(body))
                 IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
-                send(Nodes.get_pid(:calculator), {:new_value, {@exchange, Coin.get_global_name(coin), value}})
+                send(NodeRepository.get_module_pid("calculator"), {:new_value, {@exchange, Coin.get_global_name(coin), value}})
         end
         Process.sleep(@request_time)
         operate(tail)
