@@ -4,8 +4,7 @@ defmodule Calculator.BasicStrategy do
 		Enum.each(coin_values_map, fn({key, value}) ->
 			if (value != %{}) do # Check if map values 
 				map = cross_all_exchanges(Map.to_list(value), %{})
-				IO.puts("Final MAP: #{inspect(map)}")
-				send(calculator_handler_pid, {:new_calc, {key, map}})
+				send(calculator_handler_pid, {:new_calc, {"triangular", key, map}})
 			end
 		end)
 		coin_values_map

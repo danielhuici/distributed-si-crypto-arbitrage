@@ -5,7 +5,7 @@ defmodule Exchange.Bitfinex do
     @url "https://api.bitfinex.com/v2/calc/trade/avg"
     @request_time 5000
 
-	def operate(list_coin) do
+	def operate(list_coin, calculator_handler_pid) do
         list_coin = if List.first(list_coin) == nil do 
             [
             Exchange.Bitfinex.CoinFactory.new_coin("BTC_USD","BTCUSD"),
@@ -26,10 +26,10 @@ defmodule Exchange.Bitfinex do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> 
                 value = List.first(Jason.decode!(body))
                 IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
-                send(NodeRepository.get_module_pid("calculator"), {:new_value, {@exchange, Coin.get_global_name(coin), value}})
+                send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), value}})
         end
         Process.sleep(@request_time)
-        operate(tail)
+        operate(tail, calculator_handler_pid)
     end
 
     

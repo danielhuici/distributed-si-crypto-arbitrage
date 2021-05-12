@@ -5,7 +5,7 @@ defmodule Exchange.Binance do
     @url "https://binance.com/api/v3/avgPrice?symbol="
     @request_time 5000
 
-    def operate(list_coin) do
+    def operate(list_coin, calculator_handler_pid) do
 		list_coin = if list_coin == [] do
 			[
 			Exchange.Binance.CoinFactory.new_coin("BTC_USD","BTCUSDT"),
@@ -25,7 +25,7 @@ defmodule Exchange.Binance do
 			{:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
 				value = Float.parse(Jason.decode!(body)["price"])
 				IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
-				send(NodeRepository.get_module_pid("calculator"), {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
+				send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
 			_ -> IO.puts("Error while requesting #{inspect(@exchange)}")
 			#	IO.puts "Not found :("
 			#{:error, %HTTPoison.Error{reason: reason}} ->
@@ -33,7 +33,7 @@ defmodule Exchange.Binance do
 		end
 
 		Process.sleep(@request_time)
-		operate(tail)
+		operate(tail, calculator_handler_pid)
 	end
 
 	

@@ -24,7 +24,7 @@ defmodule Core.Worker do
 	defp exchange_factory(exchange) do
 		IO.puts("[WORKER] Factory creates insance for monitor #{inspect(exchange)}")
 		exchange_module = Exchange.Model.get_module_handler(exchange)
-		spawn(fn -> exchange_module.operate([]) end)
+		spawn(fn -> exchange_module.operate([], NodeRepository.get_module_pid("calculator")) end)
 	end
 
 end
