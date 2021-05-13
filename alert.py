@@ -33,6 +33,8 @@ class DatabaseHandler:
     GET_USERS_QUERY = ("SELECT id FROM users")
     GET_EXCHANGES_QUERY = ("SELECT name FROM exchanges")
     GET_STRATEGIES_QUERY = ("SELECT name FROM strategies")
+    GET_USER_STRATEGY_QUERY = """SELECT name FROM strategies WHERE id IN (SELECT id_strategy FROM users WHERE id = %s)"""
+    GET_USER_EXCHANGES_QUERY = """SELECT name FROM exchanges WHERE id IN (SELECT exchange_id FROM user_exchange WHERE user_id = %s)"""
     GET_USER_COINS = ("SELECT name FROM `coins` WHERE id IN (SELECT coin_id FROM user_coin WHERE user_id = %(user_id)s)")
     GET_NOT_USER_COINS = ("SELECT name FROM `coins` WHERE id NOT IN (SELECT coin_id FROM user_coin WHERE user_id = %(user_id)s)")
     CHECK_USER_EXISTS = ("SELECT id FROM users WHERE id = %(user_id)s")
@@ -73,6 +75,21 @@ class DatabaseHandler:
         cursor.execute(self.GET_USERS_QUERY)
         return cursor.fetchall()
 
+    def get_user_strategy(self, user_id):
+        connection = self.connect()
+        cursor = connection.cursor()
+        cursor.execute(self.GET_USER_STRATEGY_QUERY, (user_id, ))
+        result = cursor.fetchall()
+        print(result[0][0])
+        return result[0][0]
+
+    def get_user_exchanges(self, user_id):
+        connection = self.connect()
+        cursor = connection.cursor()
+        cursor.execute(self.GET_USER_EXCHANGES_QUERY, (user_id, ))
+        return cursor.fetchall()
+
+
     def user_exists(self, user_id):
         connection = self.connect()
         cursor = connection.cursor()
@@ -104,6 +121,7 @@ class DatabaseHandler:
         cursor.execute(self.SET_USER_STRATEGY_QUERY, (strategy, user_id))
         connection.commit()
         connection.close()
+
 
     def get_current_user_coins(self, user_id):
         connection = self.connect()
@@ -138,14 +156,19 @@ class TelegramHandler:
             updater = TelegramHandler.get_updater()
             bot_message = "\U0000203C Arbitrage update\n"
             for user in users:
-                coins = db_handler.get_current_user_coins(user[0])
-                for coin in coins:
-                    for exchange in json_data[coin[0]]:
-                        print("Abeeerxd")
-                        print(exchange)
-                    #bot_message += (f"\U0001F534 *{coin[0]}*: MÍNIMO ->  {str(json_data[coin[0]]['min_exchange'])}"
-                    #            f"({str(json_data[coin[0]]['min_value'])}) MÁXIMO -> {str(json_data[coin[0]]['max_exchange'])}"
-                    #            f"({str(json_data[coin[0]]['max_value'])}) PROFIT -> {str(json_data[coin[0]]['profit'])}\n")
+                strategy = db_handler.get_user_strategy(user[0])
+                user_coins = db_handler.get_current_user_coins(user[0])
+                user_exchanges = db_handler.get_user_exchanges(user[0])
+                for coin in user_coins:
+                    bot_message += (f"\U0001F534 *{coin[0]}*:\n")
+                    for api_exchange in json_data[strategy][coin[0]]:
+                        for user_exchange in user_exchanges:
+                            if user_exchange[0] in api_exchange:    
+                                bot_message += (f"  - *{str(api_exchange)}:* MIN -> [{str(json_data[strategy][coin[0]][api_exchange]['min_exchange'])}"
+                                f" - {str(json_data[strategy][coin[0]][api_exchange]['min_value'])}]"
+                                f". MAX -> [{str(json_data[strategy][coin[0]][api_exchange]['max_exchange'])} - "
+                                f"{str(json_data[strategy][coin[0]][api_exchange]['max_value'])}]. PROFIT -> {str(json_data[strategy][coin[0]][api_exchange]['profit'])}\n")
+                                print(bot_message)
                 updater.bot.sendMessage(chat_id=user[0], text=bot_message, parse_mode='Markdown')
                 bot_message = "\U0000203C Arbitrage update\n"
             time.sleep(30)
