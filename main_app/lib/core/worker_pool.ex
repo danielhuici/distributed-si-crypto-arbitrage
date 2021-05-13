@@ -5,7 +5,7 @@ defmodule Core.WorkerPool do
 		IO.puts("[POOL] Strarted")
 		worker_list = build_initial_worker_list(NodeRepository.get_workers, [])
 		IO.puts("List workers init: #{inspect(worker_list)}")
-		listen(worker_list)
+		listen(worker_list, NodeRepository.get_module_pid("master"))
 	end
 
 	defp build_initial_worker_list(worker_list, built_list) do
@@ -23,28 +23,26 @@ defmodule Core.WorkerPool do
 		lista ++ [worker]
 	end
 	
-	defp pop_worker(list) do
-		IO.puts("[POOL] List status #{inspect(list)}")
+	defp pop_worker(list, master_pid) do
 		worker = List.pop_at(list, 0)
-		IO.puts("[POOL] Worker: #{inspect(worker)}")
+		IO.puts("[POOL] Get worker: #{inspect(worker)}")
 		if elem(worker, 0) != nil do
 			send(elem(worker, 0), {:available, self()})
 			receive do
-				{:available} -> IO.puts("[POOL] Pop worker from list #{inspect(worker)}")
-										send(NodeRepository.get_module_pid("master"), {:receive_worker, elem(worker, 0)})
-				after 5_000 -> pop_worker(elem(worker, 1))
+				{:available} -> send(master_pid, {:receive_worker, elem(worker, 0)})
+				after 5_000 -> pop_worker(elem(worker, 1), master_pid)
 			end
 			elem(worker, 1)
 		else 
-			send(NodeRepository.get_module_pid("master"), {:no_workers})
+			send(master_pid, {:no_workers})
 			[]
 		end
 	end
 		
-	defp listen(list) do
+	defp listen(list, master_pid) do
 		receive do
-			{:aniadir, worker} -> listen(add_worker(worker, list))
-			{:request_worker} -> listen(pop_worker(list))			  
+			{:aniadir, worker} -> listen(add_worker(worker, list), master_pid)
+			{:request_worker} -> listen(pop_worker(list, master_pid), master_pid)			  
 			_-> IO.puts("Error")
 		end
 	end
