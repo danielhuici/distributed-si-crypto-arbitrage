@@ -3,36 +3,36 @@ defmodule Core.Initializer do
 		init_modules(NodeRepository.get_modules())
 		init_workers(NodeRepository.get_workers())
 
-		Process.sleep(120)
+		Process.sleep(120000)
 	end
 
 	def init_modules(rows) do
-		[module | tail] = rows
+		if List.first(rows) != nil do
+			[module | tail] = rows
 
-		name = List.first(module)
-		address = List.last(module)
+			name = List.first(module)
+			address = List.last(module)
 
-		case name do
-			"pool" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
-			"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
-			"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
-			"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
-		end
-
-		if List.first(tail) != nil do
+			case name do
+				"pool" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
+				"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
+				"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
+				"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
+			end
+		
 			init_modules(tail)
 		end
 	end
 
 	def init_workers(rows) do
-        IO.puts("Veamos: #{inspect(rows)}")
-		[worker | tail] = rows
+		if List.first(rows) != nil do
+			IO.puts("Worker: #{inspect(rows)}")
+			[worker | tail] = rows
 
-		name = List.first(worker)
-		address = List.last(worker)
+			name = List.first(worker)
+			address = List.last(worker)
 
-		spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
-		if List.first(tail) != nil do
+			spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
 			init_workers(tail)
 		end
 	end

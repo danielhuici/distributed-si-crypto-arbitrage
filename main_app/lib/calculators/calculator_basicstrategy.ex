@@ -4,7 +4,7 @@ defmodule Calculator.BasicStrategy do
 		Enum.each(coin_values_map, fn({key, value}) ->
 			if (value != %{}) do # Check if map values 
 				map = cross_all_exchanges(Map.to_list(value), %{})
-				send(calculator_handler_pid, {:new_calc, {"triangular", key, map}})
+				send(calculator_handler_pid, {:new_calc, {"basic", key, map}})
 			end
 		end)
 		coin_values_map
@@ -25,9 +25,9 @@ defmodule Calculator.BasicStrategy do
 		result_map = if rest_exchanges != [] do
 			{exchange_1, value1} = exchange1
 			[{exchange2, value2} | tail] = rest_exchanges 
-			IO.puts("Cross #{inspect(exchange_1)} --> #{inspect(exchange2)}")
+			#IO.puts("Cross #{inspect(exchange_1)} --> #{inspect(exchange2)}")
 			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange_1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange_1, exchange2, value1, value2))
-			IO.puts("Result map: #{inspect(result_map)}")
+			#IO.puts("Result map: #{inspect(result_map)}")
 			cross_two_exchanges(exchange1, tail, result_map)
 		else 
 			result_map

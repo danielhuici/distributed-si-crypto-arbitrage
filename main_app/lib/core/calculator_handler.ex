@@ -4,22 +4,10 @@ defmodule Core.Calculator do
 		handle_values(%{}, %{})
 	end
 
-
-	defp create_map(cryptos, map) do 
-		map = if List.first(cryptos) != nil do
-			[coin | tail] = cryptos
-			map = Map.put(map, coin, %{})
-			create_map(tail, map)
-		else 
-			map
-		end
-		map
-	end
-
 	defp handle_values(coin_value_map, arbitrage_map) do
 		receive do 
 			{:new_value, {exchange, coin, value}} -> 
-				IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
+				#IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
 				coin_value_map = if coin_value_map[String.to_atom(coin)] == nil do
 					Map.put(coin_value_map, String.to_atom(coin), %{})
 				else
@@ -43,7 +31,8 @@ defmodule Core.Calculator do
 				send(api_pid, {:arbitrage_values, arbitrage_map})
 				handle_values(coin_value_map, arbitrage_map)
 			
-			_-> IO.puts("CALCULATOR: Error. Valor de recepción no controlado")
+			_-> IO.puts("[CALCULATOR] EXCEPTION! Unhandled call")
+				handle_values(coin_value_map, arbitrage_map)
 
 		end
 	end
@@ -52,6 +41,7 @@ defmodule Core.Calculator do
 		if list_strategies != [] do
 			[strategy | tail] = list_strategies
 			this_pid = self()
+			IO.puts("[CALCULATOR] Calling strategy: #{inspect(strategy)}")
 			spawn(fn -> strategy.calculate(coin_value_map, this_pid) end )
 			call_strategies(tail, coin_value_map)
 		end
