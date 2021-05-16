@@ -1,0 +1,49 @@
+def receive_values() do
+		receive do
+			{:new_value, map} -> IO.puts("MAP: #{inspect(map)}")
+		end
+	end
+
+
+	
+
+	def iterate_x_btc(coin_exchange, btc_usd_values, usd_x_values) do # [{"exchange" : value}, ...]
+		if List.first(coin_exchange != nil) do
+			iterate_btc_usd(btc_usd_values, usd_x_values, x_btc_value)
+			iterate_x_btc(coin, tail)
+		end
+	end
+
+
+	def iterate_btc_usd(btc_usd_values, usd_x_values, x_btc_value) do
+		if (List.first(btc_usd_value != nil)) do
+			[btc_usd_value, tail] = btc_usd_values
+			iterate_usd_x(btc_usd_value, usd_x_values, x_btc_value)
+		end
+
+	end
+
+	def iterate_usd_x(btc_usd_value, usd_x_values, x_btc_value) do
+		if (List.first(usd_x_values != nil)) do
+			[usd_x_value, tail] = usd_x_values
+			
+			iterate_usd_x(btc_usd_value, tail, x_btc_value)
+		end
+	end
+
+	def make_triangle(btc_usd, usd_x, x_btc) do
+		{btc_usd_exchange, btc_usd_value} = btc_usd
+		{usd_x_exchange, usd_x_value} = usd_x
+		{x_btc_exchange, x_btc_value} = x_btc
+		
+		profit = usd_x_value / (x_btc_value * btc_usd_value)
+
+		map = %{:exchanges => "#{btc_usd_exchange}-#{usd_x_exchange}-#{x_btc_exchange}",
+				:profit => profit }
+
+		send(self(), {:new_cross, map})
+	end
+
+	
+
+	

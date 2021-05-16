@@ -18,7 +18,6 @@ defmodule Calculator.BasicStrategy do
 		else
 			result_map
 		end
-		
 	end
 
 	defp cross_two_exchanges(exchange1, rest_exchanges, result_map) do

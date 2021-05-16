@@ -11,7 +11,11 @@ defmodule Exchange.Bitfinex do
             Exchange.Bitfinex.CoinFactory.new_coin("BTC_USD","BTCUSD"),
             Exchange.Bitfinex.CoinFactory.new_coin("ETH_BTC","ETHBTC"),
             Exchange.Bitfinex.CoinFactory.new_coin("LTC_BTC","LTCBTC"),
-            Exchange.Bitfinex.CoinFactory.new_coin("ADA_BTC","ADABTC")
+            Exchange.Bitfinex.CoinFactory.new_coin("ADA_BTC","ADABTC"),
+
+            Exchange.Kraken.CoinFactory.new_coin("ETH_USD","ETHUSD"),
+            Exchange.Kraken.CoinFactory.new_coin("LTC_USD","LTCUSD"),
+            Exchange.Kraken.CoinFactory.new_coin("ADA_USD","ADAUSD")
             ]
         else 
             list_coin

@@ -11,7 +11,11 @@ defmodule Exchange.Binance do
 			Exchange.Binance.CoinFactory.new_coin("BTC_USD","BTCUSDT"),
 			Exchange.Binance.CoinFactory.new_coin("ETH_BTC","ETHBTC"),
 			Exchange.Binance.CoinFactory.new_coin("LTC_BTC","LTCBTC"),
-			Exchange.Binance.CoinFactory.new_coin("ADA_BTC","ADABTC")
+			Exchange.Binance.CoinFactory.new_coin("ADA_BTC","ADABTC"),
+
+			Exchange.Kraken.CoinFactory.new_coin("ETH_USD","ETHUSDT"),
+            Exchange.Kraken.CoinFactory.new_coin("LTC_USD","LTCUSDT"),
+            Exchange.Kraken.CoinFactory.new_coin("ADA_USD","ADAUSDT")
 			]
 		else
 			list_coin
