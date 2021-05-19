@@ -1,10 +1,15 @@
+import Gnuplot
+
 defmodule Core.Initializer do
 	def init_all() do
 		init_modules(NodeRepository.get_modules())
 		init_workers(NodeRepository.get_workers())
+		
 
 		Process.sleep(120000)
 	end
+
+	
 
 	def init_modules(rows) do
 		if List.first(rows) != nil do
@@ -18,6 +23,7 @@ defmodule Core.Initializer do
 				"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
 				"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
 				"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
+				"plotgen" ->  spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
 			end
 		
 			init_modules(tail)

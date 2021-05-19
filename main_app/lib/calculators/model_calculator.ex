@@ -1,6 +1,6 @@
 defmodule Calculator.Model do
     @list_calcs [
-        #Calculator.BasicStrategy,
+        Calculator.BasicStrategy,
         Calculator.TriangularStrategy
     ]
     

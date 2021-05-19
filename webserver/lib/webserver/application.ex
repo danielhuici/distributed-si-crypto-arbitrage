@@ -17,18 +17,20 @@ defmodule Webserver.Router do
     use Plug.Router
     use Plug.Debugger
     require Logger
+	plug Plug.Static, at: "/", from: "./img"
     plug(Plug.Logger, log: :debug)
-
     plug(:match)
     plug(:dispatch)
 	
-	IO.puts("Testing...")
-	Process.register(self(), String.to_atom("webserver"))
-	Node.start(String.to_atom("webserver@127.0.0.1"))
-	Node.set_cookie String.to_atom("testing")
+	
 
+	
     get "/values" do
-		
+		IO.puts("Testing...")
+		Process.register(self(), String.to_atom("webserver"))
+		Node.start(String.to_atom("webserver@127.0.0.1"))
+		Node.set_cookie String.to_atom("testing")
+
 		
 		send({:calculator, :"calculator@127.0.0.1"}, {:get_values, self()})
 			receive do
@@ -36,6 +38,11 @@ defmodule Webserver.Router do
 				after 5_000 -> send_resp(conn, 500, "Service Unavailable")
 			end
     end
+	
+	get "/images" do
+		send_file(conn, 200, "img/rand.png")
+    end
+	
 
     # Basic example to handle POST requests wiht a JSON body
     post "/post" do
@@ -49,6 +56,7 @@ defmodule Webserver.Router do
 
     # "Default" route that will get called when no other route is matched
     match _ do
+		IO.puts("#{inspect(File.ls())}")
         send_resp(conn, 404, "not found")
     end
 end

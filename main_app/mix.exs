@@ -24,6 +24,7 @@ defmodule Tfg.MixProject do
       {:httpoison, "~> 1.8"},
       {:jason, "~> 1.2"},
 	  {:myxql, "~> 0.5.0"},
+	  {:gnuplot, "~> 1.20"}
     ]
   end
 end

@@ -9,11 +9,15 @@ defmodule Calculator.TriangularStrategy do
 	end
 
 	def receive_values(map, calculator_handler_pid) do
-		IO.puts("Receiver ok")
 		receive do
-			{:new_cross, coin, triangled_map} ->
-				receive_values(Map.put(map, coin, triangled_map))
-			{:end} -> send(calculator_handler_pid, {:new_calc, {"triangular", coin, triangled_map}})
+			{:new_cross, coin, exchanges, triangled_map} ->
+				#IO.puts("Recibimos para coin: #{inspect(coin)} el mapa triangulado: #{inspect(triangled_map)}\n Mapa final: #{inspect(Map.put(map, coin, triangled_map))}")
+				map = if (map[coin] == nil) do
+					Map.put(map, coin, %{})
+				else map end
+				map = Map.put(map, coin, Map.put(map[coin], exchanges, triangled_map))
+				receive_values(map, calculator_handler_pid)
+			{:end} -> send(calculator_handler_pid, {:new_calc, {:triangular, map}})
 		end
 	end
 
@@ -30,6 +34,8 @@ defmodule Calculator.TriangularStrategy do
 				#IO.puts("Coin ENTRO!: #{coin} ~ #{inspect(x_usd)}")
 			end
 			iterate_coins(initial_coin_value_map, tail, receiver)
+		else 
+			send(receiver, {:end})
 		end
 	end
 
@@ -79,18 +85,19 @@ defmodule Calculator.TriangularStrategy do
 			profit
 		end
 		
-
-		map = %{String.to_atom("#{btc_usd_exchange}-#{usd_x_exchange}-#{x_btc_exchange}") => 
-				%{
-					btc_usd_exchange => btc_usd_value,
-					usd_x_exchange => usd_x_value,
-					x_btc_exchange => x_btc_value,
-					:profit => profit 
-				}
+		exchanges = String.to_atom("#{btc_usd_exchange}-#{usd_x_exchange}-#{x_btc_exchange}")
+		values = %{
+			:btc_usd_exchange => btc_usd_exchange,
+			:usd_x_exchange => usd_x_exchange,
+			:x_btc_exchange => x_btc_exchange,
+			:btc_usd_value => btc_usd_value,
+			:usd_x_exchange => usd_x_exchange,
+			:x_btc_value => x_btc_value,
+			:profit => profit 
 		}
 				
 		#IO.puts("El MAP: #{inspect(map)}")
-		send(receiver, {:new_cross, coin, map})
+		send(receiver, {:new_cross, coin, exchanges, values})
 	end
 
 

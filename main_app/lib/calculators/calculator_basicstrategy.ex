@@ -1,13 +1,23 @@
 defmodule Calculator.BasicStrategy do
 	@behaviour Calculator
 	def calculate(coin_values_map, calculator_handler_pid) do
-		Enum.each(coin_values_map, fn({key, value}) ->
-			if (value != %{}) do # Check if map values 
-				map = cross_all_exchanges(Map.to_list(value), %{})
-				send(calculator_handler_pid, {:new_calc, {"basic", key, map}})
+		map = iterate_coins(Map.to_list(coin_values_map), %{})
+		IO.puts("Basic strategy: #{inspect(map)}")
+		send(calculator_handler_pid, {:new_calc, {:basic, map}})
+	end
+
+	defp iterate_coins(coin_values_map, result_map) do
+		if (List.first(coin_values_map) != nil) do
+			[{coin, exchanges} | tail] = coin_values_map
+			map = if (exchanges != %{}) do # Check if map values 
+				cross_all_exchanges(Map.to_list(exchanges), %{})
+			else 
+				%{}
 			end
-		end)
-		coin_values_map
+			iterate_coins(tail, Map.put(result_map, coin, map))
+		else
+			result_map
+		end
 	end
 
 	defp cross_all_exchanges(exchange_values_map, result_map) do # [Binance, Bitflinex, Coinbase] => Binance - Bitflinex, Binance - Coinbase, Bitflinex - Coinbase
