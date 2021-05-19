@@ -22,7 +22,7 @@ defmodule Core.Plotgen do
 				value_handler(insert_value(coin, exchange, profit, result_map))
 			{:end} ->
 				IO.puts("END: #{inspect(result_map)}")
-				generate_plots(result_map)
+				generate_plots(Map.to_list(result_map))
 				value_handler(result_map)
 		end
 		
@@ -64,9 +64,13 @@ defmodule Core.Plotgen do
 	end
 
 	defp generate_plots(coins) do
-		if List.first(coins != nil) do
+		if List.first(coins) != nil do
 			[{coin, exchanges} | tail] = coins
-			Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), create_datasets(Map.to_list(exchanges), []))
+			try do
+				Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), create_datasets(Map.to_list(exchanges), []))
+			rescue
+				_ -> IO.puts("Continue...")
+			end			
 			generate_plots(tail)
 		end
 	end
@@ -106,11 +110,6 @@ defmodule Core.Plotgen do
 		else 
 			plots
 		end
-	end
-
-	def final_graphic(coin, exchanges) do
-		Gnuplot.plot(create_params(coin, exchanges), create_datasets(exchanges, []))
-		IO.puts("OK")
 	end
 
     def pruebas_graficos() do

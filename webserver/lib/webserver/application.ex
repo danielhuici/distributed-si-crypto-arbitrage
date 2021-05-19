@@ -40,7 +40,14 @@ defmodule Webserver.Router do
     end
 	
 	get "/images" do
-		send_file(conn, 200, "img/rand.png")
+		conn = Plug.Conn.fetch_query_params(conn)
+		params = conn.query_params
+		try do
+			send_file(conn, 200, "../main_app/#{params["coin"]}.png")
+		rescue
+			File.Error -> send_resp(conn, 404, "File not found")
+			_ -> send_resp(conn, 500, "Internal Server Error")
+		end
     end
 	
 

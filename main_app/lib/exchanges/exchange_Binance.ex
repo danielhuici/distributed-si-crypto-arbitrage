@@ -30,7 +30,8 @@ defmodule Exchange.Binance do
 				value = Float.parse(Jason.decode!(body)["price"])
 				IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
 				send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
-			_ -> IO.puts("Error while requesting #{inspect(@exchange)}")
+			_ -> IO.puts("Error while requesting #{inspect(@exchange)}. Wait & try again...")
+				Process.sleep(30000)
 			#	IO.puts "Not found :("
 			#{:error, %HTTPoison.Error{reason: reason}} ->
 			#	IO.inspect reason
