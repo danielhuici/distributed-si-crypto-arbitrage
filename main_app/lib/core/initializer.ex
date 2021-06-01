@@ -2,35 +2,52 @@ import Gnuplot
 
 defmodule Core.Initializer do
 	def init_all() do
-		init_modules(NodeRepository.get_modules())
-		init_workers(NodeRepository.get_workers())
+		IO.puts("Current O.S: #{inspect(:os.type)}")
+		init_modules(NodeRepository.get_modules(), elem(:os.type, 0))
+		init_workers(NodeRepository.get_workers(), elem(:os.type, 0))
 		
-
 		Process.sleep(120000)
 	end
 
 	
 
-	def init_modules(rows) do
+	defp init_modules(rows, os) do
 		if List.first(rows) != nil do
 			[module | tail] = rows
 
 			name = List.first(module)
 			address = List.last(module)
 
-			case name do
-				"pool" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
-				"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
-				"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
-				"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
-				"plotgen" ->  spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
+			case os do
+				:win32 -> init_modules_win32(name, address)
+				:unix -> init_modules_unix(name, address)
 			end
 		
-			init_modules(tail)
+			init_modules(tail, os)
 		end
 	end
 
-	def init_workers(rows) do
+	defp init_modules_win32(name, address) do
+		case name do
+			"pool" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
+			"proxy" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
+			"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
+			"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
+			"plotgen" ->  spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
+		end
+	end
+
+	defp init_modules_unix(name, address) do
+		case name do
+			"pool" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.WorkerPool)"]) end)
+			"proxy" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Proxy)"]) end)
+			"calculator" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
+			"master" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
+			"plotgen" ->  spawn(fn -> System.cmd("mix", [ "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
+		end
+	end
+
+	defp init_workers(rows, os) do
 		if List.first(rows) != nil do
 			IO.puts("Worker: #{inspect(rows)}")
 			[worker | tail] = rows
@@ -38,8 +55,12 @@ defmodule Core.Initializer do
 			name = List.first(worker)
 			address = List.last(worker)
 
-			spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
-			init_workers(tail)
+			case os do
+				:win32 -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
+				:unix -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
+			end
+
+			init_workers(tail, os)
 		end
 	end
 

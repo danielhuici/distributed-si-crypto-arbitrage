@@ -11,6 +11,7 @@ defmodule NodeRepository do
 
     def get_modules() do
         {:ok, hostname} = :inet.gethostname
+        IO.puts("[NODE REPOSITORY] Hostname: #{inspect(hostname)}")
 		modules =  query_mysql("SELECT name, address FROM modules WHERE id_host IN (SELECT id FROM hosts WHERE hostname='#{hostname}')")
         modules.rows
     end

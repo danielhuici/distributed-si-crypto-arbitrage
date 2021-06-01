@@ -3,6 +3,7 @@ defmodule Core.Plotgen do
     def init() do
         IO.puts("[PLOTGEN] Started")
 		#pruebas_graficos()
+
 		value_handler_pid = spawn(fn -> value_handler(%{}) end)
         spawn(fn -> ask_arbitrage_values(NodeRepository.get_module_pid("calculator"), value_handler_pid) end)
 		plotmaker(value_handler_pid)
