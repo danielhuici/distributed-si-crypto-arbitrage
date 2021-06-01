@@ -74,10 +74,12 @@ defmodule Calculator.TriangularStrategy do
 
 
 	def make_triangle(btc_usd, usd_x, x_btc, coin, receiver) do
-		{btc_usd_exchange, btc_usd_value} = btc_usd
-		{usd_x_exchange, usd_x_value} = usd_x
-		{x_btc_exchange, x_btc_value} = x_btc
+		{btc_usd_exchange, {btc_usd_value, timestamp1}} = btc_usd
+		{usd_x_exchange, {usd_x_value, timestamp2}} = usd_x
+		{x_btc_exchange, {x_btc_value, timestamp3}} = x_btc
 		
+		IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)} --> #{inspect(timestamp3)}")
+
 		profit = usd_x_value / (x_btc_value * btc_usd_value)
 		profit = if profit < 1 do
 			profit = 1/profit

@@ -13,12 +13,12 @@ defmodule Core.Calculator do
 				else
 					coin_value_map
 				end
-				map = Map.put(coin_value_map[String.to_atom(coin)], exchange, value)
+				map = Map.put(coin_value_map[String.to_atom(coin)], exchange, {value, DateTime.utc_now()})
 				coin_value_map = Map.put(coin_value_map, String.to_atom(coin), map)
 				call_strategies(Calculator.Model.get_strategy_lists(), coin_value_map)
 				handle_values(coin_value_map, arbitrage_map)
 			{:new_calc, {strategy, new_arbitrage_calc}} ->  
-				IO.puts("[CALCULATOR] Got new data calculated for strategy ~ #{inspect(strategy)}")
+				#IO.puts("[CALCULATOR] Got new data calculated for strategy ~ #{inspect(strategy)}")
 				map = Map.put(arbitrage_map, strategy, new_arbitrage_calc)
 				handle_values(coin_value_map,map)
 			{:get_values, api_pid} -> 

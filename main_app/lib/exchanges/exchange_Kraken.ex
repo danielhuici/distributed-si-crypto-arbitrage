@@ -3,7 +3,7 @@ defmodule Exchange.Kraken do
     
     @exchange :kraken
     @url "https://api.kraken.com/0/public/Ticker?pair="
-    @request_time 5000
+    @request_time 1000
 
 	def operate(list_coin, calculator_handler_pid) do
         list_coin = if List.first(list_coin) == nil do 

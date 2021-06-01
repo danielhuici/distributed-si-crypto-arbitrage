@@ -3,7 +3,7 @@ defmodule Exchange.Binance do
 
 	@exchange :binance
     @url "https://binance.com/api/v3/avgPrice?symbol="
-    @request_time 5000
+    @request_time 1000
 
     def operate(list_coin, calculator_handler_pid) do
 		list_coin = if list_coin == [] do
