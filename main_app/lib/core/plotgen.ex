@@ -1,7 +1,7 @@
 defmodule Core.Plotgen do
 	@behaviour DistributedModule
     def init() do
-        IO.puts("[PLOTGEN] Started")
+        DebugLogger.print("[PLOTGEN] Started")
 		#pruebas_graficos()
 
 		value_handler_pid = spawn(fn -> value_handler(%{}) end)
@@ -27,33 +27,33 @@ defmodule Core.Plotgen do
 				send(pid, {result_map})
 				value_handler(result_map)
 			{:end} ->
-				#IO.puts("END: #{inspect(result_map)}")
+				#DebugLogger.print("END: #{inspect(result_map)}")
 				value_handler(result_map)
 		end
 	end
 
 	defp plotmaker(value_handler_pid) do
-		IO.puts("OK!")
+		DebugLogger.print("OK!")
 		receive do
 			{:create_plot, coin, date_init, date_end, webserver_pid} ->
-				IO.puts("Vamos a hacer un plot!")
+				DebugLogger.print("Vamos a hacer un plot!")
 				send(value_handler_pid, {:result_map, self()})
 				receive do
 					{result_map} -> 
-						IO.puts("Generamos el plot!")
+						DebugLogger.print("Generamos el plot!")
 						generate_plot_coin(coin, date_init, date_end, result_map[coin])
 						send(webserver_pid, {:ok})
 						plotmaker(value_handler_pid)
 						
 				end
-			_ -> IO.puts("what?")
+			_ -> DebugLogger.print("what?")
 					plotmaker(value_handler_pid)
 		end
 	end
 
     # Generate one plot for every coin
     defp iterate_coins(arbitrage_map, value_handler_pid) do
-		#IO.puts("Lo que recibo AL PRINCIPIO: #{inspect(Jason.encode!(result_map))}")
+		#DebugLogger.print("Lo que recibo AL PRINCIPIO: #{inspect(Jason.encode!(result_map))}")
 		result_map = Enum.map(arbitrage_map, fn {coin, exchanges} ->
 			Enum.map(exchanges, fn {exchange, value} ->
 				send(value_handler_pid, {:new_value, coin, exchange, value[:profit]})
@@ -72,7 +72,7 @@ defmodule Core.Plotgen do
 			Map.put(result_map, coin, map)
 		else result_map
 		end
-		#IO.puts("En este punto, #{inspect(profit)}")
+		#DebugLogger.print("En este punto, #{inspect(profit)}")
 		list_profits = result_map[coin][exchange]
 		#list_profits = if length(list_profits) > 7 do
 		#	[_ | list] = list_profits
@@ -80,7 +80,7 @@ defmodule Core.Plotgen do
 		#else list_profits
 		#end
 		new_list_profits = list_profits ++ [{DateTime.utc_now, profit}]
-		#IO.puts("Un poco más abajo. List profits: #{inspect(list_profits)}, New: #{inspect(new_list_profits)} |||\n Más: #{inspect(result_map)}")
+		#DebugLogger.print("Un poco más abajo. List profits: #{inspect(list_profits)}, New: #{inspect(new_list_profits)} |||\n Más: #{inspect(result_map)}")
 
 		map = Map.put(result_map[coin], exchange, new_list_profits)
 		Map.put(result_map, coin, map)
@@ -92,7 +92,7 @@ defmodule Core.Plotgen do
 			try do
 				Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), create_datasets(Map.to_list(exchanges), [], date_init, date_end))
 			rescue
-				_ -> IO.puts("Continue...")
+				_ -> DebugLogger.print("Continue...")
 			end			
 			generate_plots(tail, date_init, date_end)
 		end
@@ -101,10 +101,10 @@ defmodule Core.Plotgen do
 	defp generate_plot_coin(coin, date_init, date_end, exchanges) do
 		try do
 			datasets = create_datasets(Map.to_list(exchanges), [], date_init, date_end)
-			IO.puts("DATASETS: #{inspect(datasets)}")
+			DebugLogger.print("DATASETS: #{inspect(datasets)}")
 			Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), datasets)
 		rescue
-		_ -> IO.puts("Continue...")	
+		_ -> DebugLogger.print("Continue...")	
 		end
 	end
 
@@ -122,11 +122,11 @@ defmodule Core.Plotgen do
 	defp iterate_profits(profits, x_axis, date_init, date_end, result) do
 		if List.first(profits) != nil do
 			[{datetime, profit} | tail] = profits
-			IO.puts("Hola????: #{inspect(datetime)} --- #{inspect(date_init)} ----- #{inspect(date_end)} ")
-			IO.puts("First compare: #{inspect(DateTime.compare(date_init, datetime))}")
-			IO.puts("Second compare: #{inspect(DateTime.compare(date_end, datetime))}")
+			DebugLogger.print("Hola????: #{inspect(datetime)} --- #{inspect(date_init)} ----- #{inspect(date_end)} ")
+			DebugLogger.print("First compare: #{inspect(DateTime.compare(date_init, datetime))}")
+			DebugLogger.print("Second compare: #{inspect(DateTime.compare(date_end, datetime))}")
 			result = if (DateTime.compare(date_init, datetime) == :lt and DateTime.compare(date_end, datetime) == :gt) do
-				IO.puts("Insaid!")
+				DebugLogger.print("Insaid!")
 				result = result ++ [{x_axis, profit}]
 			else result end
 			
@@ -147,7 +147,7 @@ defmodule Core.Plotgen do
 			~w(set grid xtics ytics)a,
 		]
 		
-		IO.puts("Check create plot: #{inspect(create_plots(exchanges, 1, []))}")
+		DebugLogger.print("Check create plot: #{inspect(create_plots(exchanges, 1, []))}")
 		params ++ [Gnuplot.plots(create_plots(exchanges, 1, []))]
 	end
 

@@ -7,7 +7,7 @@ defmodule Core.Calculator do
 	defp handle_values(coin_value_map, arbitrage_map) do
 		receive do 
 			{:new_value, {exchange, coin, value}} -> 
-				#IO.puts("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
+				#DebugLogger.print("[CALCULATOR] New value from #{inspect(exchange)} - #{inspect(coin)} with value: #{inspect(value)}")
 				coin_value_map = if coin_value_map[String.to_atom(coin)] == nil do
 					Map.put(coin_value_map, String.to_atom(coin), %{})
 				else
@@ -18,15 +18,15 @@ defmodule Core.Calculator do
 				call_strategies(Calculator.Model.get_strategy_lists(), coin_value_map)
 				handle_values(coin_value_map, arbitrage_map)
 			{:new_calc, {strategy, new_arbitrage_calc}} ->  
-				#IO.puts("[CALCULATOR] Got new data calculated for strategy ~ #{inspect(strategy)}")
+				#DebugLogger.print("[CALCULATOR] Got new data calculated for strategy ~ #{inspect(strategy)}")
 				map = Map.put(arbitrage_map, strategy, new_arbitrage_calc)
 				handle_values(coin_value_map,map)
 			{:get_values, api_pid} -> 
-				#IO.puts("[CALCULATOR] Send calc data")
+				#DebugLogger.print("[CALCULATOR] Send calc data")
 				send(api_pid, {:arbitrage_values, arbitrage_map})
 				handle_values(coin_value_map, arbitrage_map)
 			
-			_-> IO.puts("[CALCULATOR] EXCEPTION! Unhandled call")
+			_-> DebugLogger.print("[CALCULATOR] EXCEPTION! Unhandled call")
 				handle_values(coin_value_map, arbitrage_map)
 
 		end
@@ -36,7 +36,7 @@ defmodule Core.Calculator do
 		if list_strategies != [] do
 			[strategy | tail] = list_strategies
 			this_pid = self()
-			#IO.puts("[CALCULATOR] Calling strategy: #{inspect(strategy)}")
+			#DebugLogger.print("[CALCULATOR] Calling strategy: #{inspect(strategy)}")
 			spawn(fn -> strategy.calculate(coin_value_map, this_pid) end )
 			call_strategies(tail, coin_value_map)
 		end

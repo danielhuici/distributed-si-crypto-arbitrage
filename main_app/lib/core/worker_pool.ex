@@ -2,9 +2,9 @@ defmodule Core.WorkerPool do
 	@behaviour DistributedModule
 
 	def init() do
-		IO.puts("[POOL] Strarted")
+		DebugLogger.print("[POOL] Strarted")
 		worker_list = build_initial_worker_list(NodeRepository.get_workers, [])
-		IO.puts("List workers init: #{inspect(worker_list)}")
+		DebugLogger.print("List workers init: #{inspect(worker_list)}")
 		listen(worker_list, NodeRepository.get_module_pid("master"))
 	end
 
@@ -25,7 +25,7 @@ defmodule Core.WorkerPool do
 	
 	defp pop_worker(list, master_pid) do
 		worker = List.pop_at(list, 0)
-		IO.puts("[POOL] Get worker: #{inspect(worker)}")
+		DebugLogger.print("[POOL] Get worker: #{inspect(worker)}")
 		if elem(worker, 0) != nil do
 			send(elem(worker, 0), {:available, self()})
 			receive do
@@ -43,7 +43,7 @@ defmodule Core.WorkerPool do
 		receive do
 			{:aniadir, worker} -> listen(add_worker(worker, list), master_pid)
 			{:request_worker} -> listen(pop_worker(list, master_pid), master_pid)			  
-			_-> IO.puts("Error")
+			_-> DebugLogger.print("Error")
 		end
 	end
 end

@@ -29,9 +29,9 @@ defmodule Exchange.Bitfinex do
         case http_response do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> 
                 value = List.first(Jason.decode!(body))
-                IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
+                DebugLogger.print("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
                 send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), value}})
-            _ -> IO.puts("Error while requesting #{inspect(@exchange)}. Wait & try again...")
+            _ -> DebugLogger.print("Error while requesting #{inspect(@exchange)}. Wait & try again...")
 				Process.sleep(30000)
         end
         Process.sleep(@request_time)

@@ -29,9 +29,9 @@ defmodule Exchange.Kraken do
             {:ok, %HTTPoison.Response{status_code: 200, body: body}} -> 
                 result = Jason.decode!(body)
                 value = elem(Float.parse(List.first(result["result"][List.first(Map.keys(result["result"]))]["a"])), 0)
-                IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
+                DebugLogger.print("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
                 send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), value}})
-            _ -> IO.puts("Error while requesting #{inspect(@exchange)}. Wait & try again...")
+            _ -> DebugLogger.print("Error while requesting #{inspect(@exchange)}. Wait & try again...")
 				Process.sleep(30000)
         end
         Process.sleep(@request_time)

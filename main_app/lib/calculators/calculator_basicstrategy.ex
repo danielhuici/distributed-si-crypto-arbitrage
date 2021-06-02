@@ -2,7 +2,7 @@ defmodule Calculator.BasicStrategy do
 	@behaviour Calculator
 	def calculate(coin_values_map, calculator_handler_pid) do
 		map = iterate_coins(Map.to_list(coin_values_map), %{})
-		#IO.puts("Basic strategy: #{inspect(map)}")
+		#DebugLogger.print("Basic strategy: #{inspect(map)}")
 		send(calculator_handler_pid, {:new_calc, {:basic, map}})
 	end
 
@@ -34,9 +34,9 @@ defmodule Calculator.BasicStrategy do
 		result_map = if rest_exchanges != [] do
 			{exchange_1, {value1, timestamp1}} = exchange1
 			[{exchange2, {value2, timestamp2}} | tail] = rest_exchanges 
-			#IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)}")
+			#DebugLogger.print("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)}")
 			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange_1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange_1, exchange2, value1, value2))
-			#IO.puts("Result map: #{inspect(result_map)}")
+			#DebugLogger.print("Result map: #{inspect(result_map)}")
 			cross_two_exchanges(exchange1, tail, result_map)
 		else 
 			result_map

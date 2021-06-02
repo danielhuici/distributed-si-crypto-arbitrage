@@ -28,11 +28,11 @@ defmodule Exchange.Binance do
 			hackney: [{:force_redirect, true}]) do
 			{:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
 				value = Float.parse(Jason.decode!(body)["price"])
-				IO.puts("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
+				DebugLogger.print("#{inspect(@exchange)}. Coin #{inspect(Coin.get_global_name(coin))} - #{inspect(Coin.get_concrete_name(coin))}. Value: #{inspect(value)}")
 				send(calculator_handler_pid, {:new_value, {@exchange, Coin.get_global_name(coin), elem(value,0)}})
-			_ -> IO.puts("Error while requesting #{inspect(@exchange)}. Wait & try again...")
+			_ -> DebugLogger.print("Error while requesting #{inspect(@exchange)}. Wait & try again...")
 				Process.sleep(30000)
-			#	IO.puts "Not found :("
+			#	DebugLogger.print "Not found :("
 			#{:error, %HTTPoison.Error{reason: reason}} ->
 			#	IO.inspect reason
 		end

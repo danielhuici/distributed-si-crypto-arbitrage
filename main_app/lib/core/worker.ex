@@ -1,7 +1,7 @@
 defmodule Core.Worker do
 	@behaviour DistributedModule
 	def init() do
-		IO.puts("[WORKER] Started")
+		DebugLogger.print("[WORKER] Started")
 		wait_call()
 	end
 
@@ -9,7 +9,7 @@ defmodule Core.Worker do
 		receive do
 			{:req, {proxy_pid, exchange}} -> exchange_factory(exchange)
 											 handle_monitor(proxy_pid)
-			{:available, pid} -> IO.puts("Available. #{inspect(pid)}")
+			{:available, pid} -> DebugLogger.print("Available. #{inspect(pid)}")
 								 send(pid, {:available})
 								 wait_call()		 
 		end		
@@ -22,7 +22,7 @@ defmodule Core.Worker do
 	end
 
 	defp exchange_factory(exchange) do
-		IO.puts("[WORKER] Factory creates insance for monitor #{inspect(exchange)}")
+		DebugLogger.print("[WORKER] Factory creates insance for monitor #{inspect(exchange)}")
 		exchange_module = Exchange.Model.get_module_handler(exchange)
 		spawn(fn -> exchange_module.operate([], NodeRepository.get_module_pid("calculator")) end)
 	end
