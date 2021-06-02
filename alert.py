@@ -162,17 +162,25 @@ class TelegramHandler:
                 for coin in user_coins:
                     bot_message += (f"\U0001F534 *{coin[0]}*:\n")
                     for api_exchange in json_data[strategy][coin[0]]:
-                        for user_exchange in user_exchanges:
-                            if user_exchange[0] in api_exchange:    
-                                bot_message += (f"  - *{str(api_exchange)}:* MIN -> [{str(json_data[strategy][coin[0]][api_exchange]['min_exchange'])}"
-                                f" - {str(json_data[strategy][coin[0]][api_exchange]['min_value'])}]"
-                                f". MAX -> [{str(json_data[strategy][coin[0]][api_exchange]['max_exchange'])} - "
-                                f"{str(json_data[strategy][coin[0]][api_exchange]['max_value'])}]. PROFIT -> {str(json_data[strategy][coin[0]][api_exchange]['profit'])}\n")
-                                print(bot_message)
+                        #print(api_exchange)
+                        if TelegramHandler.user_has_exchange(user_exchanges, api_exchange):    
+                            bot_message += (f"  - *{str(api_exchange)}:* MIN -> [{str(json_data[strategy][coin[0]][api_exchange]['min_exchange'])}"
+                            f" - {str(json_data[strategy][coin[0]][api_exchange]['min_value'])}]"
+                            f". MAX -> [{str(json_data[strategy][coin[0]][api_exchange]['max_exchange'])} - "
+                            f"{str(json_data[strategy][coin[0]][api_exchange]['max_value'])}]. PROFIT -> {str(json_data[strategy][coin[0]][api_exchange]['profit'])}\n")
+                            print(bot_message)
+                    #print("-------")
                 updater.bot.sendMessage(chat_id=user[0], text=bot_message, parse_mode='Markdown')
                 bot_message = "\U0000203C Arbitrage update\n"
             time.sleep(30)
 
+    def user_has_exchange(exchanges, api_exchanges):
+        for user_exchange in exchanges:
+            if user_exchange[0] not in api_exchanges.split("-"):
+                print(user_exchange[0])
+                print(api_exchanges.split("-"))
+                return False
+        return True
 
     def press_button_callback(update, _: CallbackContext):
         query = update.callback_query

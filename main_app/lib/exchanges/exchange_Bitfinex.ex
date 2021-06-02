@@ -1,7 +1,7 @@
 defmodule Exchange.Bitfinex do
     @behaviour Exchange
     
-    @exchange :bitflinex
+    @exchange :bitfinex
     @url "https://api.bitfinex.com/v2/calc/trade/avg"
     @request_time 1000
 
