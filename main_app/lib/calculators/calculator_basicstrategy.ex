@@ -34,7 +34,7 @@ defmodule Calculator.BasicStrategy do
 		result_map = if rest_exchanges != [] do
 			{exchange_1, {value1, timestamp1}} = exchange1
 			[{exchange2, {value2, timestamp2}} | tail] = rest_exchanges 
-			IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)}")
+			#IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)}")
 			result_map = Map.put(result_map, String.to_atom("#{Atom.to_string(exchange_1)}-#{Atom.to_string(exchange2)}"), new_get_minmax_value(exchange_1, exchange2, value1, value2))
 			#IO.puts("Result map: #{inspect(result_map)}")
 			cross_two_exchanges(exchange1, tail, result_map)

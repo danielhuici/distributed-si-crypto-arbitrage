@@ -36,7 +36,7 @@ defmodule Core.Calculator do
 		if list_strategies != [] do
 			[strategy | tail] = list_strategies
 			this_pid = self()
-			IO.puts("[CALCULATOR] Calling strategy: #{inspect(strategy)}")
+			#IO.puts("[CALCULATOR] Calling strategy: #{inspect(strategy)}")
 			spawn(fn -> strategy.calculate(coin_value_map, this_pid) end )
 			call_strategies(tail, coin_value_map)
 		end

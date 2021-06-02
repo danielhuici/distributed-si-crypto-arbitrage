@@ -78,7 +78,7 @@ defmodule Calculator.TriangularStrategy do
 		{usd_x_exchange, {usd_x_value, timestamp2}} = usd_x
 		{x_btc_exchange, {x_btc_value, timestamp3}} = x_btc
 		
-		IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)} --> #{inspect(timestamp3)}")
+		#IO.puts("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)} --> #{inspect(timestamp3)}")
 
 		profit = usd_x_value / (x_btc_value * btc_usd_value)
 		profit = if profit < 1 do
