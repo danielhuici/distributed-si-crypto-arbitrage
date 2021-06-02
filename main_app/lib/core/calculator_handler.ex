@@ -22,7 +22,7 @@ defmodule Core.Calculator do
 				map = Map.put(arbitrage_map, strategy, new_arbitrage_calc)
 				handle_values(coin_value_map,map)
 			{:get_values, api_pid} -> 
-				IO.puts("[CALCULATOR] Send calc data")
+				#IO.puts("[CALCULATOR] Send calc data")
 				send(api_pid, {:arbitrage_values, arbitrage_map})
 				handle_values(coin_value_map, arbitrage_map)
 			
