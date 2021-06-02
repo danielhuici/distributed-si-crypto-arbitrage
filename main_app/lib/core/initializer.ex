@@ -2,10 +2,28 @@ import Gnuplot
 
 defmodule Core.Initializer do
 	def init_all() do
+		IO.puts("")
+		IO.puts(" _______                             ")
+		IO.puts("(_______)                   _        ")
+		IO.puts(" _        ____ _   _ ____ _| |_ ___  ")
+		IO.puts("| |      / ___) | | |  _ (_   _) _ \ ")
+		IO.puts("| |_____| |   | |_| | |_| || || |_| |")
+		IO.puts(" \______)_|    '\'__  |  __/  \__)___/ ")
+		IO.puts("              (____/|_|              ")
+		IO.puts(" _______       _     _                                     ")
+		IO.puts("(_______)     | |   (_)  _                                 ")
+		IO.puts(" _______  ____| |__  _ _| |_  ____ _____  ____ _____  ____ ")
+		IO.puts("|  ___  |/ ___)  _ \| (_   _)/ ___|____ |/ _  | ___ |/ ___)")
+		IO.puts("| |   | | |   | |_) ) | | |_| |   / ___ ( (_| | ____| |    ")
+		IO.puts("|_|   |_|_|   |____/|_|  \__)_|   \_____|\___ |_____)_|    ")
+		IO.puts("                                        (_____|            ")
+		IO.puts("")
 		IO.puts("Current O.S: #{inspect(:os.type)}")
 		init_modules(NodeRepository.get_modules(), elem(:os.type, 0))
 		init_workers(NodeRepository.get_workers(), elem(:os.type, 0))
 		
+		
+
 		Process.sleep(120000)
 	end
 
@@ -49,7 +67,6 @@ defmodule Core.Initializer do
 
 	defp init_workers(rows, os) do
 		if List.first(rows) != nil do
-			IO.puts("Worker: #{inspect(rows)}")
 			[worker | tail] = rows
 
 			name = List.first(worker)

@@ -99,13 +99,13 @@ defmodule Core.Plotgen do
 	end
 
 	defp generate_plot_coin(coin, date_init, date_end, exchanges) do
-		#try do
+		try do
 			datasets = create_datasets(Map.to_list(exchanges), [], date_init, date_end)
 			IO.puts("DATASETS: #{inspect(datasets)}")
 			Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), datasets)
-		#rescue
-		#	_ -> IO.puts("Continue...")	
-		#end
+		rescue
+		_ -> IO.puts("Continue...")	
+		end
 	end
 
 	defp create_datasets(exchanges, datasets, date_init, date_end) do
