@@ -19,6 +19,8 @@ defmodule Core.Initializer do
 		IO.puts("                                        (_____|            ")
 		IO.puts("")
 		IO.puts("Current O.S: #{inspect(:os.type)}")
+		IO.puts("WARNING: Infreaestructure is starting up. It may take some minutes to become ready!")
+		IO.puts("")
 		init_modules(NodeRepository.get_modules(), elem(:os.type, 0))
 		init_workers(NodeRepository.get_workers(), elem(:os.type, 0))
 		
@@ -35,6 +37,8 @@ defmodule Core.Initializer do
 
 			name = List.first(module)
 			address = List.last(module)
+
+			IO.puts("#{inspect(name)} will be launched on this node")
 
 			case os do
 				:win32 -> init_modules_win32(name, address)
@@ -72,6 +76,8 @@ defmodule Core.Initializer do
 			name = List.first(worker)
 			address = List.last(worker)
 
+			IO.puts("#{inspect(name)} will be launched on this node")
+		
 			case os do
 				:win32 -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)
 				:unix -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Worker)"]) end)

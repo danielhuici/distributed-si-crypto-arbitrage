@@ -99,15 +99,15 @@ defmodule Core.Plotgen do
 	end
 
 	defp generate_plot_coin(coin, date_init, date_end, exchanges) do
-		#try do
+		try do
 			datasets = create_datasets(Map.to_list(exchanges), [], date_init, date_end)
 			#DebugLogger.print("DATASETS: #{inspect(datasets)}")
 			Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), datasets)
 
 			#Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), [[{"21-06-07--19:00", 1.0000119325634749}, {"21-06-07--19:05", 1.0001524304559903}, {"21-06-07--19:10", 1.0002026298167541}, {"21-06-07--19:15", 1.0007524258268388}, {"21-06-07--19:20", 1.0008721283196567}], [{"21-06-07--19:00", 1.0008676842327315}, {"21-06-07--19:05", 1.0010332693713655}, {"21-06-07--19:10", 1.0012191914109267}, {"21-06-07--19:15", 1.0005017525298208}, {"21-06-07--19:20", 1.000443914565402}], [{"21-06-07--19:00", 1.0008796271499034}, {"21-06-07--19:05", 1.000880704669161}, {"21-06-07--19:10", 1.0010163556502136}, {"21-06-07--19:15", 1.0012545558882215}, {"21-06-07--19:20", 1.0013164300355228}]])
-		#rescue
-		#_ -> DebugLogger.print("Continue...")	
-		#end
+		rescue
+		_ -> DebugLogger.print("Continue...")	
+		end
 	end
 
 	defp create_datasets(exchanges, datasets, date_init, date_end) do

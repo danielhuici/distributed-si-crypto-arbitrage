@@ -32,11 +32,11 @@ defmodule NodeRepository do
     defp query_mysql(query) do
         result = try do
             result = MyXQL.query!(mysql_connection(), query)
-            IO.puts("[MySQL] OK")
+            DebugLogger.print("[MySQL] OK")
             result
         rescue
             DBConnection.ConnectionError -> 
-                            IO.puts("[MySQL] Query failed. Trying again...")
+                            DebugLogger.print("[MySQL] Query failed. Trying again...")
                             Process.sleep(1000)
                             query_mysql(query)
         end
