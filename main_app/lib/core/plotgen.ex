@@ -10,7 +10,7 @@ defmodule Core.Plotgen do
     end
 
     defp ask_arbitrage_values(calculator_pid, value_handler_pid) do
-        Process.sleep(20000)
+        Process.sleep(300000)
         send(calculator_pid, {:get_values, self()})
         receive do
             {:arbitrage_values, arbitrage_map} ->
@@ -46,7 +46,7 @@ defmodule Core.Plotgen do
 						plotmaker(value_handler_pid)
 						
 				end
-			_ -> DebugLogger.print("what?")
+			_ -> DebugLogger.print("No debug")
 					plotmaker(value_handler_pid)
 		end
 	end
@@ -99,13 +99,15 @@ defmodule Core.Plotgen do
 	end
 
 	defp generate_plot_coin(coin, date_init, date_end, exchanges) do
-		try do
+		#try do
 			datasets = create_datasets(Map.to_list(exchanges), [], date_init, date_end)
-			DebugLogger.print("DATASETS: #{inspect(datasets)}")
+			#DebugLogger.print("DATASETS: #{inspect(datasets)}")
 			Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), datasets)
-		rescue
-		_ -> DebugLogger.print("Continue...")	
-		end
+
+			#Gnuplot.plot(create_params(Atom.to_string(coin), Map.to_list(exchanges)), [[{"21-06-07--19:00", 1.0000119325634749}, {"21-06-07--19:05", 1.0001524304559903}, {"21-06-07--19:10", 1.0002026298167541}, {"21-06-07--19:15", 1.0007524258268388}, {"21-06-07--19:20", 1.0008721283196567}], [{"21-06-07--19:00", 1.0008676842327315}, {"21-06-07--19:05", 1.0010332693713655}, {"21-06-07--19:10", 1.0012191914109267}, {"21-06-07--19:15", 1.0005017525298208}, {"21-06-07--19:20", 1.000443914565402}], [{"21-06-07--19:00", 1.0008796271499034}, {"21-06-07--19:05", 1.000880704669161}, {"21-06-07--19:10", 1.0010163556502136}, {"21-06-07--19:15", 1.0012545558882215}, {"21-06-07--19:20", 1.0013164300355228}]])
+		#rescue
+		#_ -> DebugLogger.print("Continue...")	
+		#end
 	end
 
 	defp create_datasets(exchanges, datasets, date_init, date_end) do
@@ -113,27 +115,34 @@ defmodule Core.Plotgen do
 		
 		if List.first(exchanges) != nil do
 			[{exchange, profits} | tail] = exchanges
-			new_profits = iterate_profits(profits, 0, date_init, date_end, [])
+			new_profits = iterate_profits(profits, date_init, date_end, [])
 			datasets = datasets ++ [new_profits]
 			create_datasets(tail,  datasets, date_init, date_end)
 		else datasets end
 	end
 
-	defp iterate_profits(profits, x_axis, date_init, date_end, result) do
+	defp iterate_profits(profits, date_init, date_end, result) do
 		if List.first(profits) != nil do
 			[{datetime, profit} | tail] = profits
 			DebugLogger.print("Hola????: #{inspect(datetime)} --- #{inspect(date_init)} ----- #{inspect(date_end)} ")
-			DebugLogger.print("First compare: #{inspect(DateTime.compare(date_init, datetime))}")
-			DebugLogger.print("Second compare: #{inspect(DateTime.compare(date_end, datetime))}")
+			#DebugLogger.print("First compare: #{inspect(DateTime.compare(date_init, datetime))}")
+			#DebugLogger.print("Second compare: #{inspect(DateTime.compare(date_end, datetime))}")
 			result = if (DateTime.compare(date_init, datetime) == :lt and DateTime.compare(date_end, datetime) == :gt) do
-				DebugLogger.print("Insaid!")
-				result = result ++ [{x_axis, profit}]
+				DebugLogger.print("Datetime: #{inspect(DateTime.to_string(datetime))}. Format: #{inspect(format_datetime(DateTime.to_string(datetime)))}")
+				result = result ++ [{format_datetime(DateTime.to_string(datetime)), profit}]
 			else result end
 			
-			iterate_profits(tail, x_axis + 5, date_init, date_end, result)
+			iterate_profits(tail, date_init, date_end, result)
 		else
 			result
 		end
+	end
+
+	defp format_datetime(datetime) do
+		[date | time] = String.split(datetime, " ")
+		time = String.slice(List.first(time), 0, 5)
+		date = String.slice(date, 2, 10)
+		date <> "--" <> time
 	end
 
 	defp create_params(title, exchanges) do
@@ -143,6 +152,10 @@ defmodule Core.Plotgen do
 			[:set, :ylabel, "Profit"],
 			[:set, :term, :png, :size, '1920,1080'],
 			[:set, :output, "#{title}.png"],
+			[:set, :xdata, :time],
+			[:set, :timefmt, "%y-%m-%d--%H:%M"],
+			[:set, :format, :x, "%m/%d %H:%M"],
+			#[:plot, "-", :using, '1:2'],
 			~w(set key left top)a,
 			~w(set grid xtics ytics)a,
 		]
@@ -154,7 +167,7 @@ defmodule Core.Plotgen do
 	defp create_plots(exchanges, i, plots) do
 		if List.first(exchanges) != nil do
 			[{exchange, profit} | tail] = exchanges
-			plots = plots ++ [["-", :title, Atom.to_string(exchange), :with, :lines, :ls, i]]
+			plots = plots ++ [["-", :using, '1:2', :title, Atom.to_string(exchange), :with, :lines, :ls, i]]
 			create_plots(tail, i + 1, plots)
 		else 
 			plots
@@ -169,16 +182,39 @@ defmodule Core.Plotgen do
 	end
 
     def pruebas_graficos() do
-		points      = [1,2,3,4,5,6,7,8]
-		clojure_gui = [1.487, 1.397, 1.400, 1.381, 1.440, 5.784, 49.275]
-		elixir_gui  = [0.005, 0.010, 0.004, 0.059, 0.939, 5.801, 43.464]
-		elixir_png  = [0.002, 0.010, 0.049, 0.040, 0.349, 4.091, 41.521]
-		ubuntu_t2m  = [0.004, 0.002, 0.001, 0.008, 0.211, 1.873, 19.916]
-		ubuntu_strm = [0.002, 0.001, 0.001, 0.009, 0.204, 1.279, 12.858]
-		datasets = for ds <- [clojure_gui, elixir_gui, elixir_png, ubuntu_t2m, ubuntu_strm], do:
-		Enum.zip(points, ds)
 
-		Gnuplot.plot("'test.data'")
+		datasets = [[{"95-03-21--20:05",1}, {"95-03-21--20:10",2}]]
+
+		#datasets = []
+		Gnuplot.plot([
+		[:set, :title, "Time to render scatter plots"],
+		[:set, :xlabel, "Points in plot"],
+		[:set, :ylabel, "Elapsed (s)"],
+		[:set, :xdata, :time],
+		[:set, :timefmt, "%y-%m-%d--%H:%M"],
+		[:set, :format, :x, "%m/%d %H:%M"],
+		
+		~w(set xtics rotate by 90)a,
+		~w(set key left top)a,
+		~w(set grid xtics ytics)a,
+		#~w(set xtics add ('Pi' 3.14159))a,
+		#~w(set xtics '01/12', 172800, '05/12')a,
+		
+		~w(set style line 1 lw 2 lc '#63b132')a,
+		~w(set style line 2 lw 2 lc '#2C001E')a,
+		~w(set style line 3 lw 2 lc '#5E2750')a,
+		~w(set style line 4 lw 2 lc '#E95420')a,
+		~w(set style line 5 lw 4 lc '#77216F')a,
+		[:plot, "-", :using, '1:2'],
+		Gnuplot.plots([
+			["-", :title, "Clojure GUI", :with, :lines, :ls, 1],
+			["-", :title, "Elixir GUI", :with, :lines, :ls, 2],
+			["-", :title, "Elixir PNG", :with, :lines, :ls, 3],
+			["-", :title, "Elixir t2.m", :with, :lines, :ls, 4],
+			["-", :title, "Elixir Stream", :with, :lines, :ls, 5]
+		])],
+		datasets
+		)
 	end
 
 end
