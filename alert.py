@@ -210,7 +210,7 @@ class TelegramHandler:
             market = context.args[4]
             exchange = context.args[5]
             
-            img_data = requests.get(ANALYZE_API + "?coin=" + market + "&date_init=" + date_init + "&date_end=" + date_end + "&time_init=" + time_init + "&time_end=" + time_end + "?exchange=" + exchange).content
+            img_data = requests.get(ANALYZE_API + "?coin=" + market + "&date_init=" + date_init + "&date_end=" + date_end + "&time_init=" + time_init + "&time_end=" + time_end + "&exchange=" + exchange).content
             with open('picture.png', 'wb') as handler:
                 handler.write(img_data)
 
