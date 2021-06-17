@@ -25,6 +25,9 @@ defmodule Core.Calculator do
 				#DebugLogger.print("[CALCULATOR] Send calc data")
 				send(api_pid, {:arbitrage_values, arbitrage_map})
 				handle_values(coin_value_map, arbitrage_map)
+			{:get_market, api_pid} ->
+				send(api_pid, {:market_values, coin_value_map})
+				handle_values(coin_value_map, arbitrage_map)
 			
 			_-> DebugLogger.print("[CALCULATOR] EXCEPTION! Unhandled call")
 				handle_values(coin_value_map, arbitrage_map)

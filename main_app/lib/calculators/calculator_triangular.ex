@@ -81,11 +81,11 @@ defmodule Calculator.TriangularStrategy do
 		#DebugLogger.print("Crossing values with timestamps: #{inspect(timestamp1)} --> #{inspect(timestamp2)} --> #{inspect(timestamp3)}")
 
 		profit = usd_x_value / (x_btc_value * btc_usd_value)
-		profit = if profit < 1 do
-			profit = 1/profit
-		else 
-			profit
-		end
+		#profit = if profit < 1 do
+		#	profit = 1/profit
+		#else 
+		#	profit
+		#end
 		
 		exchanges = String.to_atom("#{btc_usd_exchange}-#{usd_x_exchange}-#{x_btc_exchange}")
 		values = %{
@@ -93,7 +93,7 @@ defmodule Calculator.TriangularStrategy do
 			:usd_x_exchange => usd_x_exchange,
 			:x_btc_exchange => x_btc_exchange,
 			:btc_usd_value => btc_usd_value,
-			:usd_x_exchange => usd_x_exchange,
+			:usd_x_value => usd_x_value,
 			:x_btc_value => x_btc_value,
 			:profit => profit 
 		}

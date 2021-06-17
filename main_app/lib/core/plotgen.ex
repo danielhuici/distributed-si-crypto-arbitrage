@@ -147,7 +147,7 @@ defmodule Core.Plotgen do
 
 	defp create_params(title, exchanges) do
 		params = [
-			[:set, :title, title],
+			[:set, :title, String.replace(title, "_", "-")],
 			[:set, :xlabel, "Time (min)"],
 			[:set, :ylabel, "Profit"],
 			[:set, :term, :png, :size, '1920,1080'],
@@ -167,7 +167,7 @@ defmodule Core.Plotgen do
 	defp create_plots(exchanges, i, plots) do
 		if List.first(exchanges) != nil do
 			[{exchange, profit} | tail] = exchanges
-			plots = plots ++ [["-", :using, '1:2', :title, Atom.to_string(exchange), :with, :lines, :ls, i]]
+			plots = plots ++ [["-", :using, '1:2', :title, String.replace(Atom.to_string(exchange), "_", "-"), :with, :lines, :ls, i]]
 			create_plots(tail, i + 1, plots)
 		else 
 			plots

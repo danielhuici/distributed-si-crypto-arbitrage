@@ -22,7 +22,17 @@ defmodule Core.WorkerPool do
 	IO.inspect lista, label: "[POOL] List add:"
 		lista ++ [worker]
 	end
-	
+
+	defp wait_alive(worker, pool_pid) do
+		send(worker, {:available, self()})
+		receive do
+			{:available} -> send(pool_pid, {:add, worker})
+			{:alive} -> send(pool_pid, {:add, worker})
+			after 30_000 -> wait_alive(worker, pool_pid)
+		end
+	end
+	 
+
 	defp pop_worker(list, master_pid) do
 		worker = List.pop_at(list, 0)
 		DebugLogger.print("[POOL] Get worker: #{inspect(worker)}")
@@ -30,7 +40,10 @@ defmodule Core.WorkerPool do
 			send(elem(worker, 0), {:available, self()})
 			receive do
 				{:available} -> send(master_pid, {:receive_worker, elem(worker, 0)})
-				after 5_000 -> pop_worker(elem(worker, 1), master_pid)
+				after 5_000 -> 
+					pool_pid = self()
+					wait_alive(elem(worker, 0), pool_pid)
+					pop_worker(elem(worker, 1), master_pid)
 			end
 			elem(worker, 1)
 		else 
@@ -41,7 +54,7 @@ defmodule Core.WorkerPool do
 		
 	defp listen(list, master_pid) do
 		receive do
-			{:aniadir, worker} -> listen(add_worker(worker, list), master_pid)
+			{:add, worker} -> listen(add_worker(worker, list), master_pid)
 			{:request_worker} -> listen(pop_worker(list, master_pid), master_pid)			  
 			_-> DebugLogger.print("Error")
 		end

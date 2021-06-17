@@ -24,9 +24,8 @@ defmodule Core.Initializer do
 		init_modules(NodeRepository.get_modules(), elem(:os.type, 0))
 		init_workers(NodeRepository.get_workers(), elem(:os.type, 0))
 		
-		
-
-		Process.sleep(120000)
+		Process.sleep(30000)
+		IO.puts("All nodes are ready!")
 	end
 
 	
@@ -56,6 +55,7 @@ defmodule Core.Initializer do
 			"calculator" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
 			"master" -> spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
 			"plotgen" ->  spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
+			"supportresistances" ->  spawn(fn -> System.cmd("cmd.exe", ["/c", "start", "mix", "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.SupportResistances)"]) end)
 		end
 	end
 
@@ -66,6 +66,8 @@ defmodule Core.Initializer do
 			"calculator" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Calculator)"]) end)
 			"master" -> spawn(fn -> System.cmd("mix", ["run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Master)"]) end)
 			"plotgen" ->  spawn(fn -> System.cmd("mix", [ "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.Plotgen)"]) end)
+			"supportresistances" ->  spawn(fn -> System.cmd("mix", [ "run", "-e", "Core.Initializer.register_and_launch(:#{String.to_atom(name)}, :'#{String.to_atom(address)}', Core.SupportResistances)"]) end)
+			
 		end
 	end
 
