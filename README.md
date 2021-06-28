@@ -45,7 +45,7 @@ You can retrive the data at `/values`
 			"profit":1.0005068423720225
 		}
 	}
-}
+},
 "triangular":{
 	"ADA_BTC":{
 		"binance-binance-binance":{
@@ -65,6 +65,7 @@ You can retrive the data at `/values`
 			"usd_x_value":1.40318698,
 			"x_btc_exchange":"bitfinex",
 			"x_btc_value":3.946e-5
+		},
 		"binance-binance-kraken":{
 			"btc_usd_exchange":"binance",
 			"btc_usd_value":35581.83134952,
@@ -80,7 +81,7 @@ You can retrive the data at `/values`
 ```
 
 Support/Resistance plot:
-![Support/Resitance plot](https://imgur.com/xuF3Rgr)
+![Support/Resitance plot](https://i.imgur.com/xuF3Rgr.png)
 
 ## How to deploy
 
