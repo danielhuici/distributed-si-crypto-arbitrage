@@ -1,0 +1,8 @@
+		USD	    BTC_binance ETH_binance BTC_bitfinex ETH_bitfinex
+USD		-	     2,8176e-5   4.486e-4    2,760e-5	   4.466e-5
+BTC_binance	35528.85     -		 15.888	     -		   15.883   
+ETH_binance	2229.216     X		-	      				     		
+BTC_bitfinex
+ETH_bitfinex
+
+	U < 10000

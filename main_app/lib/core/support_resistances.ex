@@ -86,24 +86,37 @@ defmodule Core.SupportResistances do
     defp generate_plot_coin(coin, exchange, date_init, date_end, dataset) do
 		try do
             dataset = parse_dataset(dataset, date_init, date_end, [])
+            #dataset = [{"21-06-28--16:46", 8}, {"21-06-28--16:47", 5}, {"21-06-28--16:48", 5}, {"21-06-28--16:49", 0}, {"21-06-28--16:50", 1}, {"21-06-28--16:51", 1.5}, {"21-06-28--16:52", 2}, {"21-06-28--16:53", 3}, {"21-06-28--16:54", 4}, {"21-06-28--16:55", 3}, {"21-06-28--16:56", 2}, {"21-06-28--16:57", 1}, {"21-06-28--16:58", 2}, {"21-06-28--16:59", 3}, {"21-06-28--17:00", 5}, {"21-06-28--17:01", 3}, {"21-06-28--17:02", 2}, {"21-06-28--17:02", 0}, {"21-06-28--17:03", 2}, {"21-06-28--17:04", 3}] #,  {"21-06-28--17:05", 4}, {"21-06-28--17:06", 3}, {"21-06-28--17:08",2.5}, {"21-06-28--17:09", 2}, {"21-06-28--17:10", 1}]
+            DebugLogger.print("GO resistances")
             resistances = parse_dataset_nocheck(find_max_peaks(dataset, date_init, date_end, []), [])
+            DebugLogger.print("GO support")
             supports = parse_dataset_nocheck(find_min_peaks(dataset, date_init, date_end, []), [])
+            DebugLogger.print("[Support] #{inspect(supports)}")
+            DebugLogger.print("[Resistances] #{inspect(resistances)}")
             dataset = [dataset]
-            #DebugLogger.print("[Support] #{inspect(support)}")
             dataset = if List.first(supports) != nil do
-            dataset ++ [supports]
+                dataset = add_extra_dataset(dataset, supports)
             else dataset end
             dataset = if List.first(resistances) != nil do
-                dataset ++ [resistances]
+                dataset = add_extra_dataset(dataset, resistances)
             else dataset end
             DebugLogger.print("[DATASETS] #{inspect(dataset)}")
             DebugLogger.print("Go!")
-            Gnuplot.plot(create_params(Atom.to_string(coin), exchange, trunc(length(supports) / 2), trunc(length(resistances) / 2)), dataset)
+            Gnuplot.plot(create_params(Atom.to_string(coin), exchange, length(supports), length(resistances)), dataset)
+            
             DebugLogger.print("Done!")
         rescue
 		_ -> DebugLogger.print("Continue...")	
 		end
 	end
+
+    def add_extra_dataset(dataset, any) do
+        if List.first(any) != nil do
+            [first | tail] = any
+            dataset = dataset ++ [first]
+            add_extra_dataset(dataset, tail)
+        else dataset end
+    end
 
     defp parse_dataset(dataset, date_init, date_end, new_list) do
         if List.first(dataset) != nil do
@@ -122,9 +135,11 @@ defmodule Core.SupportResistances do
 
     defp parse_dataset_nocheck(dataset, new_list) do
         if List.first(dataset) != nil do
-            [{value, datetime} | tail] = dataset
+            [item | tail] = dataset
+            {value1, datetime1} = List.first(item)
+            {value2, datetime2} = List.last(item)
             #DebugLogger.print("Datetime: #{inspect(DateTime.to_string(datetime))}. Format: #{inspect(format_datetime(DateTime.to_string(datetime)))}")
-			new_list = new_list ++ [{format_datetime(DateTime.to_string(datetime)), value}]
+			new_list = new_list ++ [[{format_datetime(DateTime.to_string(datetime1)), value1}, {format_datetime(DateTime.to_string(datetime2)), value2}]]
             parse_dataset_nocheck(tail, new_list)
         else new_list end
     end
@@ -133,19 +148,19 @@ defmodule Core.SupportResistances do
 
     defp create_params(title, exchange, n_supports, n_resistances) do
         DebugLogger.print("n_supports: #{inspect(n_supports)} || n_resistances: #{inspect(n_resistances)}")
-        support_plots = create_plots("Support", 1, n_supports + 1, [])
-        resistances_plots = create_plots("Resistance", n_supports + 1, n_supports + n_resistances + 1, [])
+        support_plots = create_plots("Support", 1, n_supports, [])
+        resistances_plots = create_plots("Resistance", n_supports + 1, n_supports + n_resistances, [])
         DebugLogger.print("Support plots: #{inspect(support_plots)} || Resistance plots: #{inspect(resistances_plots)}")
         plots = [["-", :using, '1:2', :title, Atom.to_string(exchange), :with, :lines, :ls, 0]]
         plots = if List.first(support_plots) != nil do
-            plots ++ [support_plots]
+            plots ++ support_plots
         else plots end
         plots = if List.first(resistances_plots) != nil do
-            plots ++ [resistances_plots]
+            plots ++ resistances_plots
         else plots end
         #plots = [["-", :using, '1:2', :title, String.replace(Atom.to_string(exchange), "-", "_"), :with, :lines, :ls, 0], support_plots, resistances_plots]
         #plots = [["-", :using, '1:2', :title, String.replace(Atom.to_string(title), "-", "_"), :with, :lines, :ls, 1]]
-        DebugLogger.print("Plots: #{inspect(support_plots)} || Resistance plots: #{inspect(resistances_plots)}")
+        #DebugLogger.print("Plots: #{inspect(support_plots)} || Resistance plots: #{inspect(resistances_plots)}")
         DebugLogger.print("Final: #{inspect(plots)}")
 		params = [
 			[:set, :title, String.replace(title, "_", "-")],
@@ -156,6 +171,7 @@ defmodule Core.SupportResistances do
 			[:set, :xdata, :time],
 			[:set, :timefmt, "%y-%m-%d--%H:%M"],
 			[:set, :format, :x, "%m/%d %H:%M"],
+            #~w(set style line 0 lw 2 lc '#ff0000')a,
 			~w(set key left top)a,
 			~w(set grid xtics ytics)a,
             Gnuplot.plots(plots)
@@ -166,8 +182,8 @@ defmodule Core.SupportResistances do
 	end
 
     defp create_plots(name, i, j, result) do
-        if (i < j) do
-            result = result ++ ["-", :using, '1:2', :title, "#{name}" , :with, :lines, :ls, i]
+        if (i <= j) do
+            result = result ++ [["-", :using, '1:2', :title, "#{name}" , :with, :lines, :ls, i]]
             create_plots(name, i + 1, j, result)
         else
             result
@@ -182,13 +198,13 @@ defmodule Core.SupportResistances do
 	end
 
     defp find_max_peaks(dataset, date_init, date_end, max_peaks) do
-        DebugLogger.print("Dataset status (MAX_PEAKS): #{inspect(dataset)}\n")
+        #DebugLogger.print("Dataset status (MAX_PEAKS): #{inspect(dataset)}\n")
         if List.first(dataset) != nil do
             if (length(dataset) > 5) do
                 [p1, p2, p3, p4, p5 | tail] = dataset
                 max_peaks = if elem(p1, 1) < elem(p2, 1) and elem(p2, 1) < elem(p3, 1) and elem(p4, 1) < elem(p3, 1) and elem(p5, 1) < elem(p4, 1) do
                     DebugLogger.print("Maximo encontrado!!")
-                    max_peaks ++ [{elem(p3, 1), date_init}, {elem(p3, 1), date_end}]
+                    max_peaks ++ [[{elem(p3, 1), date_init}, {elem(p3, 1), date_end}]]
                 else max_peaks end    
                 DebugLogger.print("Lista: #{inspect(max_peaks)}")
                 max_peaks
@@ -199,13 +215,13 @@ defmodule Core.SupportResistances do
 
 
     defp find_min_peaks(dataset, date_init, date_end, min_peaks) do
-        DebugLogger.print("Dataset status (MIN_PEAKS): #{inspect(dataset)}\n")
+        #DebugLogger.print("Dataset status (MIN_PEAKS): #{inspect(dataset)}\n")
         if List.first(dataset) != nil do
             if (length(dataset)  > 5) do
                 [p1, p2, p3, p4, p5 | tail] = dataset
                 min_peaks = if elem(p1, 1) > elem(p2, 1) and elem(p2, 1) > elem(p3, 1) and elem(p4, 1) > elem(p3, 1) and elem(p5, 1) > elem(p4, 1) do
                     DebugLogger.print("Minimo encontrado!!")
-                    min_peaks ++ [{elem(p3, 1), date_init}, {elem(p3, 1), date_end}]
+                    min_peaks ++  [[{elem(p3, 1), date_init}, {elem(p3, 1), date_end}]]
                 else min_peaks end    
                 DebugLogger.print("Lista: #{inspect(min_peaks)}")
                 min_peaks

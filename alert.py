@@ -43,6 +43,7 @@ class DatabaseHandler:
     CHECK_USER_EXISTS = ("SELECT id FROM users WHERE id = %(user_id)s")
     DELETE_USER_MARKET = """DELETE FROM user_coin WHERE user_id=%s AND coin_id IN (SELECT id FROM coins WHERE name = %s)"""
     DELETE_USER_EXCHANGE = """DELETE FROM user_exchange WHERE user_id=%s AND exchange_id IN (SELECT id FROM exchanges WHERE name = %s)"""
+    DELETE_USER = """DELETE FROM users WHERE id=%s"""
 
 
     def connect(self):
@@ -132,6 +133,13 @@ class DatabaseHandler:
         connection.commit()
         connection.close()
 
+    def delete_user(self, user_id):
+        connection = self.connect()
+        cursor = connection.cursor()
+        cursor.execute(self.DELETE_USER, (user_id, ))
+        connection.commit()
+        connection.close()
+
     def delete_exchange(self, user_id, exchange):
         connection = self.connect()
         cursor = connection.cursor()
@@ -165,6 +173,7 @@ class TelegramHandler:
         dispatcher.add_handler(CommandHandler("add_exchanges", TelegramHandler.create_add_exchange_keyboard))
         dispatcher.add_handler(CommandHandler("delete_exchanges", TelegramHandler.create_exchange_delete_keyboard))
         dispatcher.add_handler(CommandHandler("strategy", TelegramHandler.create_strategy_keyboard))
+        dispatcher.add_handler(CommandHandler("unsuscribe", TelegramHandler.unsuscribe))
         dispatcher.add_handler(CommandHandler("help", TelegramHandler.send_help_message))
         dispatcher.add_handler(CallbackQueryHandler(TelegramHandler.press_button_callback))
         updater.start_polling()
@@ -181,7 +190,8 @@ class TelegramHandler:
                     f"/delete_markets -> Delete markets\n"
                     f"/add_exchanges -> Add more exchanges to your preferences\n"
                     f"/delete_exchanges -> Delete exchanges\n"
-                    f"/strategy -> Change your calculation strategy"
+                    f"/strategy -> Change your calculation strategy\n"
+                    f"/unsuscribe -> Unsuscribe from the bot\n"
                     f"/history <date init> <time init> <date end> <time end> <market> -> Get a profit history plot\n"
                     f"/analyze <date init> <time init> <date end> <time end> <market> <exchange> -> Analyze the market to get supports/resistances\n")
 
@@ -218,8 +228,16 @@ class TelegramHandler:
         except:
             update.message.reply_text('ERROR: Bad parameters or no data on given time range')
 
+    def unsuscribe(update, context):
+        db_handler = DatabaseHandler()
+        db_handler.delete_user(update.effective_chat.id)
+        update.message.reply_text('You have been unsuscribed successfully. Use /start to suscribe again')
+        
+        
+
+
     def monitor():
-        print("Started")
+        
         db_handler = DatabaseHandler()
         while True:
             users = db_handler.get_users()
@@ -228,9 +246,13 @@ class TelegramHandler:
             updater = TelegramHandler.get_updater()
             bot_message = "\U0000203C Arbitrage update\n"
             for user in users:
-                strategy = db_handler.get_user_strategy(user[0])
-                user_market = db_handler.get_current_user_coins(user[0])
-                user_exchanges = db_handler.get_user_exchanges(user[0])
+                try:   
+                    strategy = db_handler.get_user_strategy(user[0])
+                    user_market = db_handler.get_current_user_coins(user[0])
+                    user_exchanges = db_handler.get_user_exchanges(user[0])                    
+                except:
+                    strategy = "basic"
+                    user_market, user_exchanges = []
                 worth_send = False
                 for market in user_market:
                     bot_message += (f"\U0001F534 *{market[0]}*:\n")
@@ -274,7 +296,7 @@ class TelegramHandler:
                         f"{str(json_data['triangular'][market][api_exchange]['profit'])}\n")
                             
 
-    def press_button_callback(update, _: CallbackContext):
+    def press_button_callback(update, context: CallbackContext):
         query = update.callback_query
         db_handler = DatabaseHandler()
 
@@ -284,7 +306,7 @@ class TelegramHandler:
         if "MARKET_OK" == command : TelegramHandler.create_exchange_keyboard(update)
         elif "MARKET" == command : db_handler.insert_user_coin(update.effective_user.id, value)
         elif "MARKET_ADD_OK" == command : TelegramHandler.send_message(update.effective_user.id, "Markets have been updated successfully")
-        elif "EXCHANGE_OK" == command : TelegramHandler.create_strategy_keyboard(update)
+        elif "EXCHANGE_OK" == command : TelegramHandler.create_strategy_keyboard(update, context)
         elif "EXCHANGE_ADD_OK" == command : TelegramHandler.send_message(update.effective_user.id, "Exchanges have been updated successfully")
         elif "EXCHANGE" == command : db_handler.insert_user_exchange(update.effective_user.id, value)
         elif "STRATEGY_OK" == command : TelegramHandler.get_updater().bot.sendMessage(chat_id=update.effective_user.id, text='Everything is ready!')
@@ -326,14 +348,14 @@ class TelegramHandler:
         db_handler = DatabaseHandler()    
         keyboard = TelegramHandler.create_keyboard_button(db_handler.get_current_user_coins(update.effective_user.id), "MARKETDEL", "MARKETDEL_OK")
         reply_markup = InlineKeyboardMarkup(keyboard)
-        TelegramHandler.get_updater().bot.sendMessage(chat_id=update.effective_user.id, text='Choose markets you want to delete:', reply_markup=reply_markup)
+        TelegramHandler.get_updater().bot.sendMessage(chat_id=update.effective_user.id, text='Choose markets you want to delete', reply_markup=reply_markup)
 
     def create_market_keyboard(update, context: CallbackContext):
         db_handler = DatabaseHandler()
         keyboard = TelegramHandler.create_keyboard_button(db_handler.get_markets(update.effective_user.id), "MARKET", "MARKET_OK")
         reply_markup = InlineKeyboardMarkup(keyboard)
         message_reply_text = 'Choose the markets you want to add'
-        TelegramHandler.get_updater().bot.sendMessage(chat_id=update.effective_user.id, text='Choose markets you want to delete:', reply_markup=reply_markup)
+        TelegramHandler.get_updater().bot.sendMessage(chat_id=update.effective_user.id, text='Choose the markets you want to add', reply_markup=reply_markup)
 
     def create_exchange_keyboard(update):
         db_handler = DatabaseHandler()    
@@ -369,7 +391,7 @@ class TelegramHandler:
         if (db_handler.user_exists(user.id) == False):
             db_handler.insert_user(user.id)
             update.message.reply_markdown_v2(fr'Hi {user.mention_markdown_v2()}\!', reply_markup=ForceReply(selective=True),)
-            TelegramHandler.create_market_keyboard(update)
+            TelegramHandler.create_market_keyboard(update, context)
         else:
             update.message.reply_markdown_v2(fr'You have already been suscribed\!', reply_markup=ForceReply(selective=True),)
 
