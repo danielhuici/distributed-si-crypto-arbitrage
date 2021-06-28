@@ -28,6 +28,8 @@ defmodule Webserver.Router do
 		Process.register(self(), String.to_atom("webserver"))
 		Node.start(String.to_atom("webserver@127.0.0.1"))
 		Node.set_cookie String.to_atom("testing")
+		
+		send_resp(conn, 200, "Infraestructure connection OK")
 	end
 	
     get "/values" do
