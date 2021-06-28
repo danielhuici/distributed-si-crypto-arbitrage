@@ -23,14 +23,14 @@ defmodule Webserver.Router do
     plug(:dispatch)
 	
 	
-
-	
-    get "/values" do
+	get "/register" do
 		IO.puts("Testing...")
 		Process.register(self(), String.to_atom("webserver"))
 		Node.start(String.to_atom("webserver@127.0.0.1"))
 		Node.set_cookie String.to_atom("testing")
-
+	end
+	
+    get "/values" do
 		
 		send({:calculator, :"calculator@127.0.0.1"}, {:get_values, self()})
 			receive do
