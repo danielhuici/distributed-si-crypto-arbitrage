@@ -252,7 +252,8 @@ class TelegramHandler:
                     user_exchanges = db_handler.get_user_exchanges(user[0])                    
                 except:
                     strategy = "basic"
-                    user_market, user_exchanges = []
+                    user_market = []
+                    user_exchanges = []
                 worth_send = False
                 for market in user_market:
                     bot_message += (f"\U0001F534 *{market[0]}*:\n")
